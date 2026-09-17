@@ -86,15 +86,15 @@
     // 辅助函数：将相对URL或本地IP URL转换为使用serverUrl的绝对URL
     getAbsoluteUrl(url) {
       if (!url) return url;
-      // 媒体基地址（直接使用公网IP）
-      const mediaBase = 'http://119.145.17.34:8000';
+      const isStatic = !!window.__STATIC_PAGE_ID__;
+      const mediaBase = isStatic ? 'https://pub-2c4d70b54401408980230857bdbfcec3.r2.dev' : 'http://szdptk.com:8000';
       // 当前页面入口（Cpolar HTTPS，有备案）
       const entryOrigin = window.location.origin;
       if (url.startsWith('http')) {
         // 原站公网地址统一改写为 HTTPS
-        if (url.includes('119.145.17.34:8000')) {
+        if (url.includes('szdptk.com:8000')) {
           const path = url.replace(/^https?:\/\/[^\/]+/, '');
-          // 媒体资源（uploads/pdf 等静态文件）走 leyon.top HTTPS 反代
+          // 媒体资源（uploads/pdf 等静态文件）走 szdptk.com 直连
           if (path.startsWith('/uploads/') || path.startsWith('/pdf/') || path.includes('/static/')) {
             return mediaBase + path;
           }
@@ -110,13 +110,13 @@
       }
       // 非http开头的URL，检查是否是相对路径
       if (url.startsWith('/')) {
-        // 媒体相对路径走 leyon.top，其它走当前入口
+        // 媒体相对路径走 szdptk.com，其它走当前入口
         if (url.startsWith('/uploads/') || url.startsWith('/pdf/') || url.includes('/static/')) {
           return mediaBase + url;
         }
         return entryOrigin + url;
       } else {
-        // 相对路径，添加uploads前缀（媒体走 leyon.top）
+        // 相对路径，添加uploads前缀（媒体走 szdptk.com）
         return mediaBase + '/uploads/' + url;
       }
     },
