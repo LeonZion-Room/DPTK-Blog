@@ -87,7 +87,7 @@
     getAbsoluteUrl(url) {
       if (!url) return url;
       const isStatic = !!window.__STATIC_PAGE_ID__;
-      const mediaBase = isStatic ? 'https://pub-2c4d70b54401408980230857bdbfcec3.r2.dev' : 'http://szdptk.com:8000';
+      const mediaBase = isStatic ? 'https://pub-2c4d70b54401408980230857bdbfcec3.r2.dev' : 'http://119.145.17.34:8000';
       // 当前页面入口（Cpolar HTTPS，有备案）
       const entryOrigin = window.location.origin;
       if (url.startsWith('http')) {
@@ -2111,28 +2111,17 @@
         shareDesc = (info.title || '') + (info.phone ? ' | ' + info.phone : '');
       }
       
-      // 确保分享图片是完整的URL
-      let finalShareIcon = shareIcon;
-      if (finalShareIcon && !finalShareIcon.startsWith('http')) {
-        if (finalShareIcon.startsWith('/')) {
-          finalShareIcon = this.serverUrl + finalShareIcon;
+      // 确保分享图片是完整的URL（使用 getAbsoluteUrl 处理 R2 等静态站点映射）
+      let finalShareIcon = shareIcon ? this.getAbsoluteUrl(shareIcon) : '';
+      if (!finalShareIcon) {
+        // 尝试从 og:image meta 标签获取（静态站点已注入正确的 R2 URL）
+        const ogImage = document.querySelector('meta[property="og:image"]');
+        if (ogImage) {
+          finalShareIcon = ogImage.getAttribute('content');
         } else {
-          finalShareIcon = this.serverUrl + '/' + finalShareIcon;
+          finalShareIcon = this.getAbsoluteUrl('/uploads/20260415_063127_e659038a.png');
         }
       }
-      if (!finalShareIcon) {
-        finalShareIcon = this.serverUrl + '/uploads/20260415_063127_e659038a.png';
-      }
-      
-      console.log('分享设置:', {
-        title: shareTitle,
-        desc: shareDesc,
-        link: window.location.href,
-        imgUrl: finalShareIcon
-      });
-      
-      console.log('是否微信环境:', WechatJSSDK.isWechat());
-      
       if (!WechatJSSDK.isWechat()) {
         console.log('非微信环境，跳过JSSDK配置');
         return;
