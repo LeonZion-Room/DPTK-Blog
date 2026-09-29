@@ -499,6 +499,7 @@
         // --- 5. 按钮配置 ---
         const btnCopy = document.getElementById('btnCopy');
         const btnLink = document.getElementById('btnLink');
+        const btnShare = document.getElementById('btnShare');
 
         if (info.hideButtons) {
           if (buttonGroup) buttonGroup.style.display = 'none';
@@ -581,6 +582,24 @@
         // 按钮1跳转链接
         if (info.btn1Jump && info.btn1Jump.trim()) {
           if (btnCopy) btnCopy.style.display = 'none';
+          // 模板未提供 btnLink 元素时，复用 btnShare 作为跳转热区
+          if (!btnLink && btnShare) {
+            btnShare.textContent = info.btn1Text || '了解更多';
+            btnShare.setAttribute('data-jump-href', info.btn1Jump);
+            // 捕获阶段拦截：可覆盖 btnShare 上可能存在的其他点击监听
+            if (!btnShare.__jumpBound && btnShare.parentElement) {
+              btnShare.__jumpBound = true;
+              btnShare.parentElement.addEventListener('click', function (ev) {
+                var hit = ev.target && ev.target.closest ? ev.target.closest('[data-jump-href]') : null;
+                if (!hit) return;
+                var href = hit.getAttribute('data-jump-href');
+                if (!href) return;
+                ev.preventDefault();
+                ev.stopPropagation();
+                window.location.href = href;
+              }, true);
+            }
+          }
           if (btnLink) {
             btnLink.style.display = 'inline-block';
             btnLink.href = info.btn1Jump;

@@ -1674,13 +1674,24 @@ video[poster^="data:"] {
   transform: rotate(-45deg);
 }
 
+/* 小屏（≤360px）：按钮强制保持同一行并自适应压缩，取消竖排堆叠 */
 @media screen and (max-width: 360px) {
   .button-group {
-    flex-direction: column;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center;
   }
-  
+
   .btn {
-    width: 100%;
+    /* JS 会内联写 width/flex，故需 !important 才能压缩，避免溢出换行 */
+    min-width: 0 !important;
+    flex-shrink: 1 !important;
+    max-width: 100% !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
