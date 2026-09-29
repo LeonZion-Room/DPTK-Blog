@@ -102,6 +102,42 @@ body.page-bg-scale-to-fill {
   100% { background-position: 200% 0; }
 }
 
+/* 等待全部图片加载：全屏居中旋转指示器（正文此时 visibility:hidden） */
+.img-load-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f7f8fa;
+}
+.img-load-mask.is-hidden {
+  display: none;
+}
+.img-load-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.img-wait-spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid rgba(0, 0, 0, 0.12);
+  border-top-color: rgba(0, 0, 0, 0.55);
+  animation: img-wait-spin 0.8s linear infinite;
+}
+@keyframes img-wait-spin {
+  to { transform: rotate(360deg); }
+}
+.img-wait-text {
+  font-size: 13px;
+  color: #718096;
+  letter-spacing: 0.5px;
+}
+
 /* 背景主题 - 仅控制背景 */
 .bg-theme-purple-pink {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);

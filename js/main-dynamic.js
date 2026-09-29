@@ -220,13 +220,53 @@
       }
     },
     
+    // 等正文内所有图片加载完成后再展示，避免滚动过程中出现空白块
+    waitForImages(timeout) {
+      const pageContainer = document.getElementById('pageContainer');
+      if (!pageContainer) return Promise.resolve();
+      const imgs = Array.from(pageContainer.querySelectorAll('img'));
+      if (!imgs.length) return Promise.resolve();
+
+      return new Promise(resolve => {
+        let left = 0;
+        let done = false;
+        const finish = () => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          resolve();
+        };
+        const onSettled = () => {
+          left -= 1;
+          if (left <= 0) finish();
+        };
+        // 超时兜底：个别图 404/超慢时不应把用户永久挡在加载页之外
+        const timer = setTimeout(finish, timeout);
+        imgs.forEach(img => {
+          if (img.complete && img.naturalWidth > 0) return;
+          left += 1;
+          img.addEventListener('load', onSettled, { once: true });
+          img.addEventListener('error', onSettled, { once: true });
+        });
+        if (left === 0) finish();
+      });
+    },
+
+    // 骨架屏/遮罩收尾：图片齐了才揭示正文
     hideSkeleton() {
       const skeleton = document.getElementById('loadingSkeleton');
+      const mask = document.getElementById('imgLoadMask');
       const pageContainer = document.getElementById('pageContainer');
-      if (skeleton) skeleton.style.display = 'none';
-      if (pageContainer) pageContainer.style.display = 'block';
+
+      const reveal = () => {
+        if (skeleton) skeleton.style.display = 'none';
+        if (mask) mask.classList.add('is-hidden');
+        if (pageContainer) pageContainer.style.visibility = '';
+      };
+
+      this.waitForImages(15000).then(reveal, reveal);
     },
-    
+
     showErrorRetry() {
       const errorRetry = document.getElementById('errorRetry');
       if (errorRetry) {
@@ -718,7 +758,7 @@
           case 'image':
             const imageId = 'image_' + Date.now() + Math.floor(Math.random() * 1000);
             sectionContentHtml = '<div ' + fullContainerStyle + ' data-jump="' + (this.getAbsoluteUrl(section.jump) || '') + '" data-zoomable="' + (section.zoomable ? 'true' : 'false') + '">' +
-                    '<img id="' + imageId + '" class="clickable-resource" data-res-url="' + this.getAbsoluteUrl(section.src) + '" src="' + this.getAbsoluteUrl(section.src) + '"  alt="" loading="lazy" style="width: 100%; height: auto; object-fit: contain; display: block;">' +
+                    '<img id="' + imageId + '" class="clickable-resource" data-res-url="' + this.getAbsoluteUrl(section.src) + '" src="' + this.getAbsoluteUrl(section.src) + '"  alt="" loading="eager" decoding="async" style="width: 100%; height: auto; object-fit: contain; display: block;">' +
                     '</div>';
             break;
           case 'video':
@@ -735,7 +775,7 @@
             sectionContentHtml += '<div class="image-grid" style="--grid-padding: ' + gridPadding + 'px; --grid-gap: ' + gridGap + 'px; border-radius: ' + gridBorderRadius + 'px; overflow: hidden;">';
             section.images.forEach((img) => {
               sectionContentHtml += '<div class="image-grid-item" data-jump="' + (this.getAbsoluteUrl(img.jump) || '') + '">' +
-                      '<img class="clickable-resource" data-res-url="' + this.getAbsoluteUrl(img.src) + '" src="' + this.getAbsoluteUrl(img.src) + '"  alt="" loading="lazy">' +
+                      '<img class="clickable-resource" data-res-url="' + this.getAbsoluteUrl(img.src) + '" src="' + this.getAbsoluteUrl(img.src) + '"  alt="" loading="eager" decoding="async">' +
                       '</div>';
             });
             sectionContentHtml += '</div>';
@@ -783,7 +823,7 @@
           case 'footer':
             const footerMargin = section.margin !== undefined ? section.margin : 0;
             sectionContentHtml = '<div class="footer-section" style="margin-left: ' + footerMargin + 'px; margin-right: ' + footerMargin + 'px; margin-top: 0; margin-bottom: 0; padding: 0; width: calc(100% - ' + (footerMargin * 2) + 'px);">' +
-                    '<img class="clickable-resource" data-res-url="' + this.getAbsoluteUrl(section.src) + '" src="' + this.getAbsoluteUrl(section.src) + '"  alt="" loading="lazy" style="width: 100%; height: auto; object-fit: cover; border-radius: 0;">' +
+                    '<img class="clickable-resource" data-res-url="' + this.getAbsoluteUrl(section.src) + '" src="' + this.getAbsoluteUrl(section.src) + '"  alt="" loading="eager" decoding="async" style="width: 100%; height: auto; object-fit: cover; border-radius: 0;">' +
                     '</div>';
             break;
           case 'imageGridLink':
@@ -896,7 +936,7 @@
         section.icons.forEach((icon) => {
           const jumpUrl = this.getAbsoluteUrl(icon.jump);
           html += '<div class="icon-row-item"' + (jumpUrl ? ' data-jump="' + jumpUrl + '"' : '') + '>';
-          html += '<img class="clickable-resource" data-res-url="' + this.getAbsoluteUrl(icon.src) + '" src="' + this.getAbsoluteUrl(icon.src) + '"  alt="' + (icon.name || '') + '" loading="lazy" style="max-width:' + maxSize + 'px;max-height:' + maxSize + 'px;">';
+          html += '<img class="clickable-resource" data-res-url="' + this.getAbsoluteUrl(icon.src) + '" src="' + this.getAbsoluteUrl(icon.src) + '"  alt="' + (icon.name || '') + '" loading="eager" decoding="async" style="max-width:' + maxSize + 'px;max-height:' + maxSize + 'px;">';
           html += '<div class="icon-label">' + (icon.name || '') + '</div>';
           html += '</div>';
         });
@@ -1046,7 +1086,7 @@
       const imageButtonId = 'imageButton_' + Date.now() + Math.floor(Math.random() * 1000);
       let html = '<div ' + contentStyle + '>';
       html += '<div id="' + imageButtonId + '" class="image-button-container" style="position: relative; width: 100%;">';
-      html += '<img class="clickable-resource" data-res-url="' + this.getAbsoluteUrl(section.src) + '" src="' + this.getAbsoluteUrl(section.src) + '"  alt="" loading="lazy" style="width: 100%; height: auto; object-fit: contain; display: block;">';
+      html += '<img class="clickable-resource" data-res-url="' + this.getAbsoluteUrl(section.src) + '" src="' + this.getAbsoluteUrl(section.src) + '"  alt="" loading="eager" decoding="async" style="width: 100%; height: auto; object-fit: contain; display: block;">';
       
       if (section.buttons && section.buttons.length > 0) {
         section.buttons.forEach((button, index) => {
@@ -1200,7 +1240,7 @@
       
       let html = '<div ' + contentStyle + '>';
       html += '<div id="' + gridLinkId + '" class="image-grid-link-container" style="position: relative; width: 100%; overflow: hidden; border-radius: ' + borderRadius + 'px;">';
-      html += '<img class="clickable-resource" data-res-url="' + this.getAbsoluteUrl(section.src) + '" src="' + this.getAbsoluteUrl(section.src) + '"  alt="" loading="lazy" style="width: 100%; height: auto; object-fit: contain; display: block;">';
+      html += '<img class="clickable-resource" data-res-url="' + this.getAbsoluteUrl(section.src) + '" src="' + this.getAbsoluteUrl(section.src) + '"  alt="" loading="eager" decoding="async" style="width: 100%; height: auto; object-fit: contain; display: block;">';
       
       html += '<div class="image-grid-link-overlay" style="position: absolute; top: ' + padding + 'px; left: ' + padding + 'px; right: ' + padding + 'px; bottom: ' + padding + 'px; display: grid; grid-template-columns: repeat(' + gridSize + ', 1fr); grid-template-rows: repeat(' + gridSize + ', 1fr); gap: ' + gap + 'px;">';
       
@@ -1853,7 +1893,7 @@
               break;
             case 'image':
               html += '<div ' + tabContainerStyle + ' data-jump="' + (this.getAbsoluteUrl(tabSection.jump) || '') + '">' +
-                      '<img class="clickable-resource" data-res-url="' + this.getAbsoluteUrl(tabSection.src) + '" src="' + this.getAbsoluteUrl(tabSection.src) + '"  alt="" loading="lazy" style="width: 100%; height: auto; max-height: 100%; object-fit: contain; border-radius: inherit;">' +
+                      '<img class="clickable-resource" data-res-url="' + this.getAbsoluteUrl(tabSection.src) + '" src="' + this.getAbsoluteUrl(tabSection.src) + '"  alt="" loading="eager" decoding="async" style="width: 100%; height: auto; max-height: 100%; object-fit: contain; border-radius: inherit;">' +
                       '</div>';
               break;
             case 'video':
@@ -1870,7 +1910,7 @@
               html += '<div class="image-grid" style="--grid-padding: ' + tabGridPadding + 'px; --grid-gap: ' + tabGridGap + 'px; border-radius: ' + tabGridBorderRadius + 'px; overflow: hidden;">';
               tabSection.images.forEach((img) => {
                 html += '<div class="image-grid-item" data-jump="' + (this.getAbsoluteUrl(img.jump) || '') + '">' +
-                        '<img class="clickable-resource" data-res-url="' + this.getAbsoluteUrl(img.src) + '" src="' + this.getAbsoluteUrl(img.src) + '"  alt="" loading="lazy">' +
+                        '<img class="clickable-resource" data-res-url="' + this.getAbsoluteUrl(img.src) + '" src="' + this.getAbsoluteUrl(img.src) + '"  alt="" loading="eager" decoding="async">' +
                         '</div>';
               });
               html += '</div>';
@@ -1883,7 +1923,7 @@
               if (tabSection.items && tabSection.items.length > 0) {
                 tabSection.items.forEach((item) => {
                   html += '<div class="carousel-item" data-jump="' + (this.getAbsoluteUrl(item.jump) || '') + '">';
-                  html += '<img class="clickable-resource" data-res-url="' + this.getAbsoluteUrl(item.src) + '" src="' + this.getAbsoluteUrl(item.src) + '"  alt="' + (item.title || '') + '" loading="lazy" style="border-radius: inherit;">';
+                  html += '<img class="clickable-resource" data-res-url="' + this.getAbsoluteUrl(item.src) + '" src="' + this.getAbsoluteUrl(item.src) + '"  alt="' + (item.title || '') + '" loading="eager" decoding="async" style="border-radius: inherit;">';
                   html += '</div>';
                 });
               }
