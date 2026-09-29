@@ -111,6 +111,8 @@ body.page-bg-scale-to-fill {
   align-items: center;
   justify-content: center;
   background: #f7f8fa;
+  /* keep page from scrolling/interacting while images load */
+  overscroll-behavior: contain;
 }
 .img-load-mask.is-hidden {
   display: none;

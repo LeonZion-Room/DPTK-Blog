@@ -258,10 +258,11 @@
       const mask = document.getElementById('imgLoadMask');
       const pageContainer = document.getElementById('pageContainer');
 
+      // 容器始终参与布局（JS 需要测量 offsetWidth 计算卡片高度），
+      // 这里只撤掉遮罩，绝不去改容器的 visibility/display。
       const reveal = () => {
         if (skeleton) skeleton.style.display = 'none';
         if (mask) mask.classList.add('is-hidden');
-        if (pageContainer) pageContainer.style.visibility = '';
       };
 
       this.waitForImages(15000).then(reveal, reveal);
