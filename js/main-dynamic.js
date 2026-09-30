@@ -220,15 +220,17 @@
       }
     },
     
-    // 等正文内所有图片加载完成后再展示，避免滚动过程中出现空白块
-    waitForImages(timeout) {
+    // 等页面里所有图片就绪后再揭示正文，避免滚动/首屏出现空白块
+    // 注意：个人信息卡的背景图是异步预加载后才插入的，必须额外等待，
+    // 否则遮罩会比背景图先撤，出现「卡片空白」。
+    _settleImages(deadline) {
       const pageContainer = document.getElementById('pageContainer');
       if (!pageContainer) return Promise.resolve();
       const imgs = Array.from(pageContainer.querySelectorAll('img'));
-      if (!imgs.length) return Promise.resolve();
-
+      const pending = imgs.filter(img => !(img.complete && img.naturalWidth > 0));
+      if (!pending.length) return Promise.resolve();
       return new Promise(resolve => {
-        let left = 0;
+        let left = pending.length;
         let done = false;
         const finish = () => {
           if (done) return;
@@ -240,16 +242,27 @@
           left -= 1;
           if (left <= 0) finish();
         };
-        // 超时兜底：个别图 404/超慢时不应把用户永久挡在加载页之外
-        const timer = setTimeout(finish, timeout);
-        imgs.forEach(img => {
-          if (img.complete && img.naturalWidth > 0) return;
-          left += 1;
+        const remain = Math.max(0, deadline - Date.now());
+        const timer = setTimeout(finish, remain);
+        pending.forEach(img => {
+          if (img.complete && img.naturalWidth > 0) { onSettled(); return; }
           img.addEventListener('load', onSettled, { once: true });
           img.addEventListener('error', onSettled, { once: true });
         });
         if (left === 0) finish();
       });
+    },
+
+    waitForImages(timeout) {
+      const deadline = Date.now() + timeout;
+      const run = async () => {
+        // 第一轮：等正文图片 + 卡片背景图
+        await Promise.all([this._settleImages(deadline), this._cardBgReady || Promise.resolve()]);
+        // 第二轮：背景图插入 DOM 后可能带出新的 <img>，再收敛一次
+        await this._settleImages(deadline);
+      };
+      // 无论成败都放行，避免个别资源异常把用户永久卡在加载页
+      return Promise.race([run(), new Promise(r => setTimeout(r, timeout + 300))]);
     },
 
     // 骨架屏/遮罩收尾：图片齐了才揭示正文
@@ -441,11 +454,16 @@
 
         const cardBgTheme = currentPage?.card_bg_theme || info.bgTheme || info.theme;
         const cardCustomBgImage = currentPage?.card_custom_bg_image || info.customBgImage;
+        // 没有背景图时也要清掉上一轮的挂起状态
+        if (!cardCustomBgImage) { this._cardBgReady = null; this._resolveCardBg = null; }
 
         if (cardCustomBgImage) {
           // 背景图片模式：绝对定位 img 层 + 文字/按钮覆盖
           const absBgUrl = this.getAbsoluteUrl(cardCustomBgImage);
           const preloadImg = new Image();
+          // 背景图是异步预加载后再插入 <img>，必须把它纳入「等图片齐了」的判定，
+          // 否则遮罩会先于背景图解除，页面出现空白卡片。
+          this._cardBgReady = new Promise(resolve => { this._resolveCardBg = resolve; });
           preloadImg.onload = () => {
             const imgRatio = preloadImg.naturalWidth / preloadImg.naturalHeight;
             const cardWidth = infoCard ? infoCard.offsetWidth : window.innerWidth;
@@ -461,9 +479,20 @@
 
               const bgImg = document.createElement('img');
               bgImg.className = 'bg-img-layer';
-              bgImg.src = absBgUrl;
               bgImg.alt = '';
               infoCard.appendChild(bgImg);
+
+              // 卡片高度已按图片比例算好，这里等这张图真正解码完成再放行遮罩
+              const settleBg = () => {
+                if (this._resolveCardBg) { this._resolveCardBg(); this._resolveCardBg = null; }
+              };
+              if (bgImg.complete && bgImg.naturalWidth > 0) {
+                settleBg();
+              } else {
+                bgImg.addEventListener('load', settleBg, { once: true });
+                bgImg.addEventListener('error', settleBg, { once: true });
+              }
+              bgImg.src = absBgUrl;
 
               const wrapper = infoCard.closest('.unified-card-wrapper');
               if (wrapper) wrapper.classList.add('bg-contain-mode');
@@ -496,7 +525,10 @@
               buttonGroup.style.margin = '0';
             }
           };
-          preloadImg.onerror = () => console.error('背景图加载失败:', absBgUrl);
+          preloadImg.onerror = () => {
+            console.error('背景图加载失败:', absBgUrl);
+            if (this._resolveCardBg) { this._resolveCardBg(); this._resolveCardBg = null; }
+          };
           preloadImg.src = absBgUrl;
 
           // 背景图模式下的默认文字颜色
