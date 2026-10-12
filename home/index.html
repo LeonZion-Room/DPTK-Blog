@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大鹏新区投资控股有限公司</title>
+<meta name="description" content="大鹏投控各团队与项目电子名片汇总">
+<meta name="keywords" content="大鹏投控,电子名片,微信名片">
+<meta property="og:title" content="大鹏新区投资控股有限公司">
+<meta property="og:description" content="大鹏投控各团队与项目电子名片汇总">
+
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',Roboto,Arial,sans-serif;
+    background:linear-gradient(180deg,#eef2f8 0%, #f7f9fc 40%, #eef2f8 100%);
+    min-height:100vh; color:#0f172a; padding-bottom:40px;
+  }
+  .wrap { max-width:1200px; margin:0 auto; padding:0 20px; }
+
+  /* ---------- 顶部 ---------- */
+  .hero {
+    position:relative; overflow:hidden; margin:0 -20px 26px; padding:48px 32px 40px;
+    background:
+      radial-gradient(60vw 40vh at 12% 0%, rgba(38,198,218,.30), transparent 62%),
+      radial-gradient(52vw 38vh at 88% 8%, rgba(124,77,255,.26), transparent 62%),
+      radial-gradient(46vw 36vh at 70% 100%, rgba(68,138,255,.22), transparent 62%),
+      linear-gradient(135deg,#0e7490 0%, #1d4ed8 55%, #5b21b6 100%);
+    color:#fff;
+  }
+  .hero::after {
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background-image:
+      linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+    background-size:34px 34px;
+  }
+  .hero > * { position:relative; z-index:1; }
+  /* logo 靠右，文字与统计靠左 */
+  .hero-inner { display:flex; align-items:flex-start; justify-content:space-between; gap:28px; }
+  .hero-main { flex:1; min-width:0; }
+  .hero-logo { flex-shrink:0; }
+  .hero-logo img {
+    width:184px; height:184px; border-radius:50%; object-fit:cover;
+    border:3px solid rgba(255,255,255,.38);
+    box-shadow:0 10px 30px rgba(0,0,0,.30), 0 0 0 6px rgba(255,255,255,.10);
+  }
+  .hero .badge {
+    display:inline-block; padding:5px 13px; border-radius:20px; font-size:12px;
+    background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.28);
+    letter-spacing:1px; margin-bottom:14px;
+  }
+  .hero h1 { font-size:30px; font-weight:800; letter-spacing:.5px; line-height:1.3; }
+  .hero .sub { margin-top:12px; font-size:15px; line-height:1.75; opacity:.9; max-width:720px; }
+  .hero .who { margin-top:16px; font-size:14px; opacity:.92; }
+  .hero .who b { font-weight:700; margin-right:8px; }
+  .hero .stats { margin-top:20px; display:flex; gap:26px; flex-wrap:wrap; }
+  .hero .stats div { font-size:13px; opacity:.9; }
+  .hero .stats b { display:block; font-size:24px; font-weight:800; letter-spacing:.5px; }
+  .hero .contact {
+    display:inline-block; margin-top:20px; padding:10px 20px;
+    font-size:14px; line-height:1.55; color:#fff; font-weight:500;
+    background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.30);
+    border-radius:24px; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    box-shadow:0 6px 20px rgba(0,0,0,.14);
+  }
+  .hero .contact a { color:#fff; font-weight:700; text-decoration:none;
+                     border-bottom:1px solid rgba(255,255,255,.65); }
+  .hero .contact a:hover { border-bottom-color:#fff; }
+
+  /* ---------- 搜索 ---------- */
+  .search { margin:0 0 24px; }
+  .search input {
+    width:100%; padding:15px 20px 15px 46px; font-size:15px; border-radius:15px;
+    border:1px solid rgba(15,23,42,.10); background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'><circle cx='11' cy='11' r='7'/><path d='M20 20l-3.5-3.5'/></svg>") no-repeat 16px center / 18px;
+    box-shadow:0 8px 26px rgba(15,23,42,.07); outline:none;
+  }
+  .search input:focus { border-color:#0e7490; box-shadow:0 8px 30px rgba(14,116,144,.22); }
+
+  /* ---------- 分组 ---------- */
+  .group { margin-bottom:26px; background:#fff; border-radius:20px;
+    box-shadow:0 10px 34px rgba(15,23,42,.08); overflow:hidden; }
+  .group > h2 {
+    padding:16px 22px; font-size:16px; font-weight:700; color:#0f172a;
+    border-bottom:1px solid #eef2f6; display:flex; align-items:center; gap:10px;
+    background:linear-gradient(90deg, rgba(14,116,144,.06), transparent 70%);
+  }
+  .group > h2::before {
+    content:''; width:4px; height:17px; border-radius:3px;
+    background:linear-gradient(180deg,#26c6da,#448aff);
+  }
+  .group > h2 .n { margin-left:auto; font-size:12px; font-weight:500; color:#94a3b8; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:13px; padding:18px; }
+  .item {
+    display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit;
+    background:#fff; border:1px solid #e8eef5; border-radius:15px; padding:13px 15px;
+    transition:transform .22s cubic-bezier(.2,.8,.2,1), box-shadow .22s, border-color .22s;
+  }
+  .item:hover { transform:translateY(-3px); box-shadow:0 14px 30px rgba(15,23,42,.15); border-color:#26c6da; }
+  .item .av {
+    flex-shrink:0; width:42px; height:42px; border-radius:50%; object-fit:cover;
+    background:#e2e8f0; border:1px solid rgba(15,23,42,.06);
+  }
+  .item .av.ph { display:flex; align-items:center; justify-content:center;
+                 color:#fff; font-weight:700; font-size:16px; border:none; }
+  .item .info { min-width:0; flex:1; }
+  .item .nm { font-weight:650; font-size:15px; line-height:1.35; color:#0f172a;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .item .ti { font-size:12px; color:#64748b; line-height:1.5; margin-top:3px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .empty { padding:70px 24px; text-align:center; color:#94a3b8; font-size:14px; line-height:2; }
+
+  @media (max-width:640px) {
+    .hero { padding:36px 20px 30px; margin:0 -20px 20px; }
+    .hero-inner { gap:16px; flex-wrap:wrap; }
+    /* 放大后手机横排放不下，logo 移到上方右对齐，标题独占一行 */
+    .hero-logo { order:-1; margin-left:auto; }
+    .hero-logo img { width:120px; height:120px; box-shadow:0 6px 18px rgba(0,0,0,.28), 0 0 0 4px rgba(255,255,255,.10); }
+    .hero-main { width:100%; }
+    .hero h1 { font-size:23px; }
+    .hero .who { font-size:13px; margin-top:12px; }
+    .hero .stats { gap:18px; }
+    .hero .stats b { font-size:20px; }
+    .grid { grid-template-columns:repeat(auto-fill,minmax(148px,1fr)); gap:10px; padding:13px; }
+    .item { padding:13px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="hero-main">
+        <div class="badge">DAPENG · 电子名片</div>
+        <h1>大鹏新区投资控股有限公司</h1>
+        <div class="stats">
+          <div><b>2</b>分组</div>
+          <div><b>13</b>张名片</div>
+        </div>
+        
+        <div class="contact"><a href="tel:13058311849">平台开发与调整请联系：大鹏投控-林奕铮（1305 8311 849）</a></div>
+        
+      </div>
+      
+      <div class="hero-logo"><img src="/uploads/20261012_164815_51a4868b.png" alt="Leon"></div>
+      
+    </div>
+  </div>
+
+  
+  <div class="search">
+    <input id="q" type="search" placeholder="搜索名片：姓名 / 职位 / 分组…" autocomplete="off">
+  </div>
+  
+
+  
+
+  
+  <section class="group" data-group="tk_pr">
+    <h2>【投控】微信名片<span class="n">4 张</span></h2>
+    <div class="grid">
+      
+      <a class="item" href="/p/yuchang/"
+         data-name="大鹏投控-余昶  【投控】微信名片">
+        
+        <img class="av" src="/uploads/20260415_135359_52059763.png" alt="" loading="lazy">
+        
+        <span class="info">
+          <span class="nm">大鹏投控-余昶</span>
+          
+        </span>
+      </a>
+      
+      <a class="item" href="/p/yuchang_copy1/"
+         data-name="大鹏投控-黎明杰  【投控】微信名片">
+        
+        <img class="av" src="/uploads/20260415_135359_52059763.png" alt="" loading="lazy">
+        
+        <span class="info">
+          <span class="nm">大鹏投控-黎明杰</span>
+          
+        </span>
+      </a>
+      
+      <a class="item" href="/p/yuchang_copy2/"
+         data-name="大鹏投控-罗泽辉  【投控】微信名片">
+        
+        <img class="av" src="/uploads/20260415_135359_52059763.png" alt="" loading="lazy">
+        
+        <span class="info">
+          <span class="nm">大鹏投控-罗泽辉</span>
+          
+        </span>
+      </a>
+      
+      <a class="item" href="/p/yuchang_copy3/"
+         data-name="大鹏投控-黎俊峰  【投控】微信名片">
+        
+        <img class="av" src="/uploads/20260415_135359_52059763.png" alt="" loading="lazy">
+        
+        <span class="info">
+          <span class="nm">大鹏投控-黎俊峰</span>
+          
+        </span>
+      </a>
+      
+    </div>
+  </section>
+  
+  <section class="group" data-group="g_b58fe66c">
+    <h2>【文旅】微信名片<span class="n">9 张</span></h2>
+    <div class="grid">
+      
+      <a class="item" href="/p/wenlv-test/"
+         data-name="大鹏文旅-刘镇彬  【文旅】微信名片">
+        
+        <img class="av" src="/uploads/20260814_110500_a1ec411f.png" alt="" loading="lazy">
+        
+        <span class="info">
+          <span class="nm">大鹏文旅-刘镇彬</span>
+          
+        </span>
+      </a>
+      
+      <a class="item" href="/p/wenlv-test_copy/"
+         data-name="大鹏文旅-李建慧  【文旅】微信名片">
+        
+        <img class="av" src="/uploads/20260814_110500_a1ec411f.png" alt="" loading="lazy">
+        
+        <span class="info">
+          <span class="nm">大鹏文旅-李建慧</span>
+          
+        </span>
+      </a>
+      
+      <a class="item" href="/p/wenlv-test_copy_copy/"
+         data-name="大鹏文旅-匡菲  【文旅】微信名片">
+        
+        <img class="av" src="/uploads/20260814_110500_a1ec411f.png" alt="" loading="lazy">
+        
+        <span class="info">
+          <span class="nm">大鹏文旅-匡菲</span>
+          
+        </span>
+      </a>
+      
+      <a class="item" href="/p/wenlv-test_copy_copy1/"
+         data-name="大鹏文旅-林俊杰  【文旅】微信名片">
+        
+        <img class="av" src="/uploads/20260814_110500_a1ec411f.png" alt="" loading="lazy">
+        
+        <span class="info">
+          <span class="nm">大鹏文旅-林俊杰</span>
+          
+        </span>
+      </a>
+      
+      <a class="item" href="/p/wenlv-test_copy_copy1_copy/"
+         data-name="大鹏文旅-步彦明  【文旅】微信名片">
+        
+        <img class="av" src="/uploads/20260814_110500_a1ec411f.png" alt="" loading="lazy">
+        
+        <span class="info">
+          <span class="nm">大鹏文旅-步彦明</span>
+          
+        </span>
+      </a>
+      
+      <a class="item" href="/p/wenlv-test_copy_copy1_copy_copy/"
+         data-name="大鹏文旅-刘婷琼  【文旅】微信名片">
+        
+        <img class="av" src="/uploads/20260814_110500_a1ec411f.png" alt="" loading="lazy">
+        
+        <span class="info">
+          <span class="nm">大鹏文旅-刘婷琼</span>
+          
+        </span>
+      </a>
+      
+      <a class="item" href="/p/wenlv-test_copy1/"
+         data-name="大鹏文旅-吴震宇  【文旅】微信名片">
+        
+        <img class="av" src="/uploads/20260814_110500_a1ec411f.png" alt="" loading="lazy">
+        
+        <span class="info">
+          <span class="nm">大鹏文旅-吴震宇</span>
+          
+        </span>
+      </a>
+      
+      <a class="item" href="/p/wenlv-test_copy_copy1_copy_copy1/"
+         data-name="大鹏文旅-彭爽丽  【文旅】微信名片">
+        
+        <img class="av" src="/uploads/20260814_110500_a1ec411f.png" alt="" loading="lazy">
+        
+        <span class="info">
+          <span class="nm">大鹏文旅-彭爽丽</span>
+          
+        </span>
+      </a>
+      
+      <a class="item" href="/p/wenlv-test_copy_copy1_copy_copy1_copy/"
+         data-name="大鹏文旅-佟明  【文旅】微信名片">
+        
+        <img class="av" src="/uploads/20260814_110500_a1ec411f.png" alt="" loading="lazy">
+        
+        <span class="info">
+          <span class="nm">大鹏文旅-佟明</span>
+          
+        </span>
+      </a>
+      
+    </div>
+  </section>
+  
+</div>
+
+
+<script>
+// 纯前端过滤：卡片全是静态的，搜索不产生任何 Worker 调用，不消耗 Cloudflare 额度
+(function () {
+  var input = document.getElementById('q');
+  if (!input) return;
+  var groups = Array.prototype.slice.call(document.querySelectorAll('.group'));
+  var all = groups.map(function (g) {
+    return { el: g, items: Array.prototype.slice.call(g.querySelectorAll('.item')) };
+  });
+  input.addEventListener('input', function () {
+    var kw = input.value.trim().toLowerCase();
+    all.forEach(function (g) {
+      var hit = 0;
+      g.items.forEach(function (it) {
+        var show = !kw || (it.dataset.name || '').toLowerCase().indexOf(kw) !== -1;
+        it.style.display = show ? '' : 'none';
+        if (show) hit++;
+      });
+      g.el.style.display = hit ? '' : 'none';
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
