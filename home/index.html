@@ -15,7 +15,10 @@
     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',Roboto,Arial,sans-serif;
     background:linear-gradient(180deg,#eef2f8 0%, #f7f9fc 40%, #eef2f8 100%);
     min-height:100vh; color:#0f172a; padding-bottom:40px;
+    /* 长英文/URL 不撑破容器；与下面各处的 break-word 一起防溢出 */
+    overflow-wrap:break-word; word-break:break-word;
   }
+  img, svg, a { max-width:100%; }
   .wrap { max-width:1200px; margin:0 auto; padding:0 20px; }
 
   /* ---------- 顶部 ---------- */
@@ -50,32 +53,26 @@
     background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.28);
     letter-spacing:1px; margin-bottom:14px;
   }
-  .hero h1 { font-size:30px; font-weight:800; letter-spacing:.5px; line-height:1.3; }
+  .hero h1 { font-size:30px; font-weight:800; letter-spacing:.5px; line-height:1.3;
+    /* 长标题在窄屏自动折行，不撑破容器 */
+    overflow-wrap:break-word; word-break:break-word; }
   .hero .sub { margin-top:12px; font-size:15px; line-height:1.75; opacity:.9; max-width:720px; }
   .hero .who { margin-top:16px; font-size:14px; opacity:.92; }
   .hero .who b { font-weight:700; margin-right:8px; }
-  .hero .stats { margin-top:20px; display:flex; gap:26px; flex-wrap:wrap; }
-  .hero .stats div { font-size:13px; opacity:.9; }
-  .hero .stats b { display:block; font-size:24px; font-weight:800; letter-spacing:.5px; }
-  .hero .contact {
-    display:inline-block; margin-top:20px; padding:10px 20px;
-    font-size:14px; line-height:1.55; color:#fff; font-weight:500;
-    background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.30);
-    border-radius:24px; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
-    box-shadow:0 6px 20px rgba(0,0,0,.14);
-  }
-  .hero .contact a { color:#fff; font-weight:700; text-decoration:none;
-                     border-bottom:1px solid rgba(255,255,255,.65); }
-  .hero .contact a:hover { border-bottom-color:#fff; }
 
-  /* ---------- 搜索 ---------- */
-  .search { margin:0 0 24px; }
-  .search input {
-    width:100%; padding:15px 20px 15px 46px; font-size:15px; border-radius:15px;
-    border:1px solid rgba(15,23,42,.10); background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'><circle cx='11' cy='11' r='7'/><path d='M20 20l-3.5-3.5'/></svg>") no-repeat 16px center / 18px;
-    box-shadow:0 8px 26px rgba(15,23,42,.07); outline:none;
+  /* ---------- 页脚联系方式 ---------- */
+  .pagefoot { margin-top:26px; text-align:center; }
+  .pagefoot .contact {
+    display:inline-block; max-width:100%; padding:10px 20px;
+    font-size:14px; line-height:1.6; color:#0e7490; font-weight:500;
+    background:#fff; border:1px solid rgba(14,116,144,.28);
+    border-radius:24px; box-shadow:0 4px 16px rgba(15,23,42,.07);
+    /* 窄屏折行，不撑破容器 */
+    overflow-wrap:break-word; word-break:break-word;
   }
-  .search input:focus { border-color:#0e7490; box-shadow:0 8px 30px rgba(14,116,144,.22); }
+  .pagefoot .contact a { color:#0e7490; font-weight:700; text-decoration:none;
+                         border-bottom:1px solid rgba(14,116,144,.45); }
+  .pagefoot .contact a:hover { border-bottom-color:#0e7490; }
 
   /* ---------- 分组 ---------- */
   .group { margin-bottom:26px; background:#fff; border-radius:20px;
@@ -84,12 +81,11 @@
     padding:16px 22px; font-size:16px; font-weight:700; color:#0f172a;
     border-bottom:1px solid #eef2f6; display:flex; align-items:center; gap:10px;
     background:linear-gradient(90deg, rgba(14,116,144,.06), transparent 70%);
+    /* 长分组名折行而不是溢出；计数用 flex-shrink 固定在右侧 */
+    overflow-wrap:break-word; word-break:break-word;
   }
-  .group > h2::before {
-    content:''; width:4px; height:17px; border-radius:3px;
-    background:linear-gradient(180deg,#26c6da,#448aff);
-  }
-  .group > h2 .n { margin-left:auto; font-size:12px; font-weight:500; color:#94a3b8; }
+  .group > h2 .n { margin-left:auto; font-size:12px; font-weight:500; color:#94a3b8;
+                   flex-shrink:0; padding-left:8px; }
   .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:13px; padding:18px; }
   .item {
     display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit;
@@ -118,12 +114,28 @@
     .hero-logo { order:-1; margin-left:auto; }
     .hero-logo img { width:120px; height:120px; box-shadow:0 6px 18px rgba(0,0,0,.28), 0 0 0 4px rgba(255,255,255,.10); }
     .hero-main { width:100%; }
-    .hero h1 { font-size:23px; }
+    .hero h1 { font-size:22px; line-height:1.35; }
     .hero .who { font-size:13px; margin-top:12px; }
-    .hero .stats { gap:18px; }
-    .hero .stats b { font-size:20px; }
     .grid { grid-template-columns:repeat(auto-fill,minmax(148px,1fr)); gap:10px; padding:13px; }
-    .item { padding:13px; }
+    .item { padding:12px; gap:10px; }
+    .item .av { width:36px; height:36px; }
+    .item .av.ph { font-size:14px; }
+    .item .nm { font-size:14px; }
+    .item .ti { font-size:11px; }
+    .group > h2 { padding:14px 16px; font-size:15px; }
+    .pagefoot { margin-top:20px; }
+    .pagefoot .contact { font-size:13px; padding:9px 16px; }
+  }
+
+  /* 极窄屏（<=380px）：再收一档，杜绝任何横向溢出 */
+  @media (max-width:380px) {
+    .wrap { padding:0 14px; }
+    .hero { padding:28px 16px 24px; margin:0 -14px 16px; }
+    .hero-logo img { width:96px; height:96px; }
+    .hero h1 { font-size:19px; }
+    .grid { grid-template-columns:1fr 1fr; gap:9px; padding:11px; }
+    .item { padding:11px; }
+    .pagefoot .contact { font-size:12.5px; padding:8px 13px; }
   }
 </style>
 </head>
@@ -135,25 +147,12 @@
       <div class="hero-main">
         <div class="badge">DAPENG · 电子名片</div>
         <h1>大鹏新区投资控股有限公司</h1>
-        <div class="stats">
-          <div><b>2</b>分组</div>
-          <div><b>13</b>张名片</div>
-        </div>
-        
-        <div class="contact"><a href="tel:13058311849">平台开发与调整请联系：大鹏投控-林奕铮（1305 8311 849）</a></div>
-        
       </div>
       
       <div class="hero-logo"><img src="https://pub-2c4d70b54401408980230857bdbfcec3.r2.dev/uploads/20261012_164815_51a4868b.png" alt="Leon"></div>
       
     </div>
   </div>
-
-  
-  <div class="search">
-    <input id="q" type="search" placeholder="搜索名片：姓名 / 职位 / 分组…" autocomplete="off">
-  </div>
-  
 
   
 
@@ -315,32 +314,10 @@
     </div>
   </section>
   
+
+  
+  <div class="pagefoot"><a href="tel:13058311849">平台开发与调整请联系：大鹏投控-林奕铮（1305 8311 849）</a></div>
+  
 </div>
-
-
-<script>
-// 纯前端过滤：卡片全是静态的，搜索不产生任何 Worker 调用，不消耗 Cloudflare 额度
-(function () {
-  var input = document.getElementById('q');
-  if (!input) return;
-  var groups = Array.prototype.slice.call(document.querySelectorAll('.group'));
-  var all = groups.map(function (g) {
-    return { el: g, items: Array.prototype.slice.call(g.querySelectorAll('.item')) };
-  });
-  input.addEventListener('input', function () {
-    var kw = input.value.trim().toLowerCase();
-    all.forEach(function (g) {
-      var hit = 0;
-      g.items.forEach(function (it) {
-        var show = !kw || (it.dataset.name || '').toLowerCase().indexOf(kw) !== -1;
-        it.style.display = show ? '' : 'none';
-        if (show) hit++;
-      });
-      g.el.style.display = hit ? '' : 'none';
-    });
-  });
-})();
-</script>
-
 </body>
 </html>
