@@ -2177,6 +2177,12 @@
     },
 
     async initWechatShare() {
+      // 分享策略：仅使用「微信聊天转发链接 → H5 卡片」。
+      // 该方式由微信爬虫读取页面静态 og:* 标签生成，不依赖公众号 / JS-SDK /
+      // IP 白名单。页面上的 og:* 已由导出流程按站域注入（见 static_export.inject_shim）。
+      // 因此这里直接返回，不再发起注定失败的 /api/wechat-sign 请求。
+      if (window.WECHAT_JSSDK_ENABLED !== true) return;
+
       console.log('开始初始化微信分享...');
       
       // 优先从名片信息组件获取数据
