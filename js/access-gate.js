@@ -5,6 +5,8 @@
  * 部署：动态站(Flask) 与 静态站(Cloudflare Pages) 共用本文件
  *       —— 必须登记进 server/static_export.py 的 STATIC_FILES，否则导出后缺失。
  *
+ * 生效范围：仅首页 /home/（含 /）。名片页 /p/<id>/ 不加门禁。
+ *
  * 设计要点：
  *  1) 口令不明文存放：比对 SHA-256 摘要（crypto.subtle），源码里只有哈希。
  *  2) 会话级：解锁状态写 sessionStorage，关闭标签页即失效；换设备需重新输入。
@@ -228,41 +230,22 @@
     }, true); // 捕获阶段，抢在 main-dynamic.js 的 handler 之前
   }
 
-  /* ================= 名片页：进页面先拦一道 ================= */
-  function gateCardPage() {
-    if (isUnlocked()) { return; }
-    // 先冻结渲染，避免口令弹窗背后已经把名片画出来了
-    var veil = document.createElement('div');
-    veil.className = 'dptk-gate-mask';
-    veil.innerHTML =
-      '<div class="dptk-gate-box" style="box-shadow:none;background:transparent">' +
-      '<div class="dptk-gate-ico">&#128274;</div></div>';
-    document.body.appendChild(veil);
-    document.documentElement.style.overflow = 'hidden';
-
-    askPasscode(
-      function () { setUnlocked(); close(veil); },
-      function () { window.history.back(); }   // 取消：退回上一页
-    );
-  }
-
-  /* ================= 入口 ================= */
+  /* ================= 入口 =================
+     范围约定（用户 2026-10-27 定）：只在首页 /home/ 层面拦截。
+     名片页 /p/<id>/ 不加门禁 —— 已解锁后正常转发/直开。
+     因此本脚本只在首页绑定点击拦截与公告；名片页即使被引入也直接跳过。 */
   function boot() {
-    styleEl();
-
     var path = location.pathname;
-    var isHome = /\/home\/?$/.test(path) || path === '/' || path === '/index.html';
-    var isCardPage = /^\/p\/[^/]+\/?$/.test(path) ||
-                     /index-dynamic\.html/.test(path);
+    var isHome = /\/home\/?$/.test(path) || path === '/' ||
+                 path === '/index.html' || path === '/index.html';
 
-    if (isHome) {
-      bindHomeCards();
-      try {
-        if (sessionStorage.getItem(CONFIG.NOTICE_KEY) !== '1') { renderNotice(); }
-      } catch (e) { renderNotice(); }
-    } else if (isCardPage) {
-      gateCardPage();
-    }
+    if (!isHome) { return; }   // 非首页：不做任何拦截
+
+    styleEl();
+    bindHomeCards();
+    try {
+      if (sessionStorage.getItem(CONFIG.NOTICE_KEY) !== '1') { renderNotice(); }
+    } catch (e) { renderNotice(); }
   }
 
   if (document.readyState === 'loading') {
