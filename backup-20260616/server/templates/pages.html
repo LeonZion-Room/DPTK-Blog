@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>页面管理</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            background: linear-gradient(90deg, #3c8ce7 0%, #15c0eb 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .header .back {
+            float: right;
+            color: white;
+            text-decoration: none;
+            margin-top: 5px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #1E63B3;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 15px;
+        }
+        .tab {
+            padding: 10px 20px;
+            border: none;
+            background: #f8f9fa;
+            color: #666;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .tab:hover {
+            background: #e9ecef;
+        }
+        .tab.active {
+            background: linear-gradient(90deg, #3c8ce7 0%, #15c0eb 100%);
+            color: white;
+        }
+        .page-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+        .page-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .page-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        .page-title-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .page-title {
+            color: #1E63B3;
+            margin: 0;
+            font-size: 18px;
+            cursor: pointer;
+            flex: 1;
+        }
+        .page-title:hover {
+            color: #0d47a1;
+        }
+        .edit-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px 8px;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        .edit-btn:hover {
+            opacity: 1;
+        }
+        .page-item p {
+            color: #666;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .page-item .group-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(90deg, #3c8ce7 0%, #15c0eb 100%);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .page-item .group-tag:hover {
+            opacity: 0.8;
+        }
+        .page-item .group-tag select {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            outline: none;
+        }
+        .page-item .group-tag select option {
+            color: #333;
+        }
+        .page-url {
+            margin: 15px 0;
+        }
+        .url-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        .url-input input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+            background: #f8f9fa;
+        }
+        .page-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn, a.btn {
+            display: inline-block;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s;
+            text-decoration: none;
+            line-height: normal;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #3c8ce7 0%, #15c0eb 100%);
+            color: white;
+        }
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .create-button {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .flash {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
+        }
+        .flash.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left-color: #dc3545;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        .empty-state h3 {
+            margin-bottom: 10px;
+        }
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+        .toast.error {
+            background: #dc3545;
+        }
+        .inline-edit-form {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex: 1;
+        }
+        .inline-edit-input {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 16px;
+            color: #1E63B3;
+            flex: 1;
+            min-width: 150px;
+        }
+        .inline-save-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .inline-cancel-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        function copyUrl(pageId) {
+            const input = document.getElementById('url-' + pageId);
+            input.select();
+            input.setSelectionRange(0, 99999);
+
+            try {
+                document.execCommand('copy');
+                showToast('链接已复制到剪贴板');
+            } catch (err) {
+                console.error('复制失败:', err);
+                showToast('复制失败，请手动复制');
+            }
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = 'toast' + (isError ? ' error' : '');
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => document.body.removeChild(toast), 300);
+            }, 2000);
+        }
+
+        function filterByGroup(groupId) {
+            const pageItems = document.querySelectorAll('.page-item');
+            const tabs = document.querySelectorAll('.tab');
+
+            tabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            pageItems.forEach(item => {
+                if (groupId === 'all' || item.dataset.groupId === groupId) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        let editingPageId = null;
+
+        function editTitle(pageId) {
+            if (editingPageId && editingPageId !== pageId) {
+                cancelEdit();
+            }
+
+            editingPageId = pageId;
+            const titleEl = document.querySelector('#page-' + pageId + ' .page-title');
+            const currentTitle = titleEl.textContent.trim();
+
+            titleEl.innerHTML = `
+                <form class="inline-edit-form" onsubmit="saveTitle(event, '${pageId}')">
+                    <input type="text" class="inline-edit-input" id="edit-title-${pageId}" value="${currentTitle.replace(/"/g, '&quot;')}">
+                    <button type="submit" class="inline-save-btn">保存</button>
+                    <button type="button" class="inline-cancel-btn" onclick="cancelEdit()">取消</button>
+                </form>
+            `;
+
+            document.getElementById('edit-title-' + pageId).focus();
+        }
+
+        function cancelEdit() {
+            if (!editingPageId) return;
+
+            const titleEl = document.querySelector('#page-' + editingPageId + ' .page-title');
+            if (titleEl) {
+                const titleInput = document.getElementById('edit-title-' + editingPageId);
+                if (titleInput) {
+                    titleEl.innerHTML = titleInput.defaultValue + ' <button class="edit-btn" onclick="editTitle(\'' + editingPageId + '\')">✏️</button>';
+                }
+            }
+            editingPageId = null;
+        }
+
+        async function saveTitle(event, pageId) {
+            event.preventDefault();
+
+            const input = document.getElementById('edit-title-' + pageId);
+            const newTitle = input.value.trim();
+
+            if (!newTitle) {
+                showToast('页面标题不能为空', true);
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/update-page', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        pageId: pageId,
+                        title: newTitle
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const titleEl = document.querySelector('#page-' + pageId + ' .page-title');
+                    titleEl.innerHTML = newTitle + ' <button class="edit-btn" onclick="editTitle(\'' + pageId + '\')">✏️</button>';
+                    showToast('标题已更新');
+                } else {
+                    throw new Error(result.error || '保存失败');
+                }
+            } catch (error) {
+                showToast(error.message, true);
+            }
+
+            editingPageId = null;
+        }
+
+        async function changeGroup(pageId, newGroupId) {
+            try {
+                const response = await fetch('/api/update-page', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        pageId: pageId,
+                        groupId: newGroupId
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.querySelector('#page-' + pageId).dataset.groupId = newGroupId;
+                    showToast('分组已更新');
+                } else {
+                    throw new Error(result.error || '保存失败');
+                }
+            } catch (error) {
+                showToast(error.message, true);
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="header">
+        <h1>页面管理</h1>
+        <a href="{{ url_for('admin') }}" class="back">返回首页</a>
+    </div>
+
+    <div class="container">
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash {% if '不能' in message or '无法' in message %}error{% endif %}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="create-button">
+            <a href="{{ url_for('create_page') }}" class="btn btn-primary">创建新页面</a>
+            <a href="{{ url_for('groups') }}" class="btn btn-secondary">管理分组</a>
+        </div>
+
+        <div class="card">
+            <h2>页面列表</h2>
+
+            {% if groups %}
+                <div class="tabs">
+                    <button class="tab active" onclick="filterByGroup('all')">全部页面</button>
+                    {% for group in groups %}
+                        <button class="tab" onclick="filterByGroup('{{ group.id }}')">{{ group.name }}</button>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if pages %}
+                <div class="page-list">
+                    {% for page in pages %}
+                        {% set page_group_id = page.groupId or 'default' %}
+                        {% set group_name = '默认分组' %}
+                        {% for group in groups %}
+                            {% if group.id == page_group_id %}
+                                {% set group_name = group.name %}
+                            {% endif %}
+                        {% endfor %}
+                        <div class="page-item" data-group-id="{{ page_group_id }}" id="page-{{ page.id }}">
+                            <div class="group-tag">
+                                <select onchange="changeGroup('{{ page.id }}', this.value)">
+                                    {% for group in groups %}
+                                        <option value="{{ group.id }}" {% if group.id == page_group_id %}selected{% endif %}>{{ group.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="page-title-row">
+                                <h3 class="page-title">{{ page.title }} <button class="edit-btn" onclick="editTitle('{{ page.id }}')">✏️</button></h3>
+                            </div>
+                            <p><strong>页面ID:</strong> {{ page.id }}</p>
+                            <p><strong>区块数量:</strong> {{ page.sections|length }}</p>
+                            <div class="page-url">
+                                <p><strong>引用链接:</strong></p>
+                                <div class="url-input">
+                                    <input type="text" value="{{ current_domain }}/index-dynamic.html?page={{ page.id }}" readonly id="url-{{ page.id }}">
+                                    <button class="btn btn-secondary" onclick="copyUrl('{{ page.id }}')">复制</button>
+                                </div>
+                            </div>
+                            <div class="page-actions">
+                                <a href="{{ url_for('edit_page_sections', page_id=page.id) }}" class="btn btn-primary">编辑内容</a>
+                                <a href="{{ url_for('edit_page', page_id=page.id) }}" class="btn btn-secondary">编辑页面</a>
+                                <form action="{{ url_for('copy_page', page_id=page.id) }}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn btn-secondary">创建副本</button>
+                                </form>
+                                <form action="{{ url_for('set_default_page', page_id=page.id) }}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn btn-secondary">设为默认</button>
+                                </form>
+                                <form action="{{ url_for('delete_page', page_id=page.id) }}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn btn-danger" onclick="return confirm('确定要删除这个页面吗？');">删除</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <h3>暂无页面</h3>
+                    <p>请点击上方按钮创建新页面</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,40 @@
+上传目录已存在: /home/leonzion/Desktop/Leon-TK-Station/WeChat-Card/server/../uploads
+微信名片H5签名服务启动中...
+当前模式: 外网模式
+当前域名: http://119.145.17.34:8000
+服务地址: http://0.0.0.0:8000
+API接口:
+  GET /api/wechat-sign?url=YOUR_URL - 获取微信签名
+  GET /api/card-config?page=PAGE_ID - 获取名片配置
+后台管理:
+  http://0.0.0.0:8000/admin - 管理界面 (用户名: admin, 密码: admin123)
+
+注意: 请确保上传目录存在且可写
+ * Serving Flask app 'server' (lazy loading)
+ * Environment: production
+   WARNING: This is a development server. Do not use it in a production deployment.
+   Use a production WSGI server instead.
+ * Debug mode: off
+Traceback (most recent call last):
+  File "/home/leonzion/Desktop/Leon-TK-Station/WeChat-Card/server/server.py", line 3591, in <module>
+    app.run(host='0.0.0.0', port=8000, debug=False)
+  File "/home/leonzion/Desktop/Leon-TK-Station/WeChat-Card/venv/lib/python3.12/site-packages/flask/app.py", line 922, in run
+    run_simple(t.cast(str, host), port, self, **options)
+  File "/home/leonzion/Desktop/Leon-TK-Station/WeChat-Card/venv/lib/python3.12/site-packages/werkzeug/serving.py", line 1017, in run_simple
+    inner()
+  File "/home/leonzion/Desktop/Leon-TK-Station/WeChat-Card/venv/lib/python3.12/site-packages/werkzeug/serving.py", line 957, in inner
+    srv = make_server(
+          ^^^^^^^^^^^^
+  File "/home/leonzion/Desktop/Leon-TK-Station/WeChat-Card/venv/lib/python3.12/site-packages/werkzeug/serving.py", line 789, in make_server
+    return ThreadedWSGIServer(
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/leonzion/Desktop/Leon-TK-Station/WeChat-Card/venv/lib/python3.12/site-packages/werkzeug/serving.py", line 693, in __init__
+    super().__init__(server_address, handler)  # type: ignore
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/socketserver.py", line 457, in __init__
+    self.server_bind()
+  File "/usr/lib/python3.12/http/server.py", line 136, in server_bind
+    socketserver.TCPServer.server_bind(self)
+  File "/usr/lib/python3.12/socketserver.py", line 473, in server_bind
+    self.socket.bind(self.server_address)
+OSError: [Errno 98] Address already in use

@@ -1,0 +1,11 @@
+{
+  "name": "wechat-card-h5-server",
+  "version": "1.0.0",
+  "description": "微信名片H5签名服务",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {},
+  "license": "MIT"
+}

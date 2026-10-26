@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微信名片管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-attachment: fixed;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            color: white;
+            padding: 25px 30px;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .header .logout {
+            color: white;
+            text-decoration: none;
+            padding: 10px 24px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .header .logout:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            padding: 40px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+        h2 {
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 26px;
+            font-weight: 700;
+            position: relative;
+            display: inline-block;
+        }
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+        .menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        .menu-item {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            padding: 35px 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+        }
+        .menu-item:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
+        }
+        .menu-item h3 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            font-size: 22px;
+            font-weight: 700;
+        }
+        .menu-item p {
+            color: #7f8c8d;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        .menu-item a {
+            display: block;
+            color: inherit;
+            text-decoration: none;
+        }
+        .flash {
+            background: rgba(76, 175, 80, 0.15);
+            color: #2e7d32;
+            padding: 20px 25px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            border-left: 5px solid #4caf50;
+            backdrop-filter: blur(10px);
+            font-weight: 500;
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>✨ 微信名片管理系统</h1>
+        <a href="{{ url_for('logout') }}" class="logout">退出登录</a>
+    </div>
+    
+    <div class="container">
+        
+        <div class="menu">
+            <div class="menu-item">
+                <a href="{{ url_for('edit_basic_info') }}">
+                    <h3>🪪 名片信息设置</h3>
+                    <p>设置名片基本信息和背景样式</p>
+                </a>
+            </div>
+            <div class="menu-item">
+                <a href="{{ url_for('pages') }}">
+                    <h3>📄 页面管理</h3>
+                    <p>创建和管理多个页面</p>
+                </a>
+            </div>
+            <div class="menu-item">
+                <a href="{{ url_for('groups') }}">
+                    <h3>📂 分组管理</h3>
+                    <p>创建和管理页面分组</p>
+                </a>
+            </div>
+            <div class="menu-item">
+                <a href="{{ url_for('upload') }}">
+                    <h3>📤 上传资源</h3>
+                    <p>上传图片、视频等资源文件</p>
+                </a>
+            </div>
+            <div class="menu-item">
+                <a href="{{ url_for('resources') }}">
+                    <h3>📁 资源管理</h3>
+                    <p>查看和管理已上传的资源</p>
+                </a>
+            </div>
+        </div>
+        
+
+    </div>
+</body>
+</html>

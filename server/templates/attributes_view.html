@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>页面属性视图</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f4f8;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(90deg, #3c8ce7 0%, #15c0eb 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .header .btn {
+            color: white;
+            text-decoration: none;
+            padding: 8px 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 6px;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .header .btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .tree-container {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .tree-column {
+            min-width: 200px;
+            flex: 1;
+            transition: all 0.3s;
+        }
+        .tree-column.hidden {
+            display: none;
+        }
+        .tree-column-title {
+            font-size: 16px;
+            font-weight: 600;
+            padding: 12px 16px;
+            color: white;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 0;
+        }
+        .tree-items {
+            background: #f9f9f9;
+            border-radius: 0 0 8px 8px;
+            padding: 8px;
+        }
+        .tree-item {
+            padding: 10px 14px;
+            margin: 4px 0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            border-left: 3px solid transparent;
+        }
+        .tree-item:hover {
+            background: #e6f7ff;
+        }
+        .tree-item.selected {
+            background: #3c8ce7;
+            color: white;
+            border-left-color: #1565c0;
+        }
+        .tree-item.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .tree-item .count {
+            float: right;
+            background: rgba(0,0,0,0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+        .tree-item.selected .count {
+            background: rgba(255,255,255,0.3);
+        }
+        .tree-item.level-0 { border-left-color: #1565c0; }
+        .tree-item.level-1 { border-left-color: #2e7d32; }
+        .tree-item.level-2 { border-left-color: #ef6c00; }
+        .tree-item.level-3 { border-left-color: #6a1b9a; }
+        .tree-item.level-4 { border-left-color: #c62828; }
+        .result-panel {
+            margin-top: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 24px;
+        }
+        .result-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        .result-card {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 16px;
+            transition: all 0.2s;
+            border-left: 4px solid #3c8ce7;
+            position: relative;
+        }
+        .result-card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .result-card-action-btn {
+            flex: 1;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            text-align: center;
+        }
+        .result-card-action-btn.edit {
+            background: #3c8ce7;
+            color: white;
+        }
+        .result-card-action-btn.edit:hover {
+            background: #2c7ce7;
+        }
+        .result-card-action-btn.view {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .result-card-action-btn.view:hover {
+            background: #c8e6c9;
+        }
+        .result-card-action-btn.delete {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .result-card-action-btn.delete:hover {
+            background: #ffcdd2;
+        }
+        .result-card-ref {
+            margin-top: 8px;
+            padding: 6px 10px;
+            background: #fff8e1;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #f57f17;
+        }
+        .result-card:hover {
+            background: #e6f7ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .result-card-id {
+            color: #999;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+        .result-card-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #333;
+            cursor: text;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .result-card-title:hover {
+            background: #f0f0f0;
+        }
+        .result-card-title.editing {
+            background: white;
+            border: 2px solid #3c8ce7;
+            outline: none;
+        }
+        .result-card-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .result-card-tag {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .tag-level-0 { background: #e3f2fd; color: #1565c0; }
+        .tag-level-1 { background: #e8f5e9; color: #2e7d32; }
+        .tag-level-2 { background: #fff3e0; color: #ef6c00; }
+        .tag-level-3 { background: #f3e5f5; color: #6a1b9a; }
+        .tag-level-4 { background: #fce4ec; color: #c62828; }
+        .filter-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .filter-tag {
+            padding: 6px 14px;
+            background: #e3f2fd;
+            color: #1565c0;
+            border-radius: 20px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .filter-tag .remove {
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        .reset-btn {
+            padding: 8px 20px;
+            background: #ff5252;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: auto;
+        }
+        .reset-btn:hover { background: #ff1744; }
+        .result-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>页面属性视图</h1>
+        <div class="header-buttons">
+            <button class="btn" onclick="addNewPage()">+ 添加新页面</button>
+            <a href="{{ url_for('admin') }}" class="btn">返回管理首页</a>
+        </div>
+    </div>
+    
+    <div class="tree-container" id="treeContainer"></div>
+    
+    <div class="result-panel" id="resultPanel">
+        <div class="result-header">
+            <div class="result-title" style="margin-bottom:0;padding-bottom:0;border-bottom:none;">筛选结果</div>
+            <button class="reset-btn" onclick="resetFilters()">重置选择</button>
+        </div>
+        <div id="filterTags"></div>
+        <div id="resultContent"></div>
+    </div>
+    
+    <script>
+        const config = {{ config | tojson }};
+        const selectedFilters = [];
+        const sectionRefs = {};
+        
+        function countSectionRefs() {
+            // 遍历所有页面，统计每个页面被引用的次数
+            const refs = {};
+            config.pages.forEach(page => {
+                refs[page.id] = 0;
+            });
+            
+            config.pages.forEach(page => {
+                if (!page.sections) return;
+                page.sections.forEach(section => {
+                    // 检查所有可能包含页面引用的字段
+                    const fieldsToCheck = ['src', 'url', 'link', 'jumpUrl'];
+                    fieldsToCheck.forEach(field => {
+                        const value = section[field];
+                        if (value && typeof value === 'string') {
+                            // 匹配 page=xxx 或 page=xxx& 的情况
+                            const match = value.match(/[?&]page=([^&]+)/);
+                            if (match && refs[match[1]] !== undefined) {
+                                refs[match[1]]++;
+                            }
+                        }
+                    });
+                });
+            });
+            
+            return refs;
+        }
+        
+        function parseAttributes(title) {
+            if (!title) return [];
+            return title.split('-').map(s => s.trim()).filter(s => s);
+        }
+        
+        function buildTree() {
+            const tree = {};
+            
+            config.pages.forEach(page => {
+                const attrs = parseAttributes(page.title);
+                attrs.forEach((attr, index) => {
+                    if (!tree[index]) tree[index] = {};
+                    if (!tree[index][attr]) tree[index][attr] = 0;
+                    tree[index][attr]++;
+                });
+            });
+            
+            return tree;
+        }
+        
+        function getAvailableAttrsForLevel(level) {
+            // 始终显示所有级别的所有属性
+            const tree = buildTree();
+            if (!tree[level]) return new Set();
+            return new Set(Object.keys(tree[level]));
+        }
+        
+        function renderTree() {
+            const tree = buildTree();
+            const container = document.getElementById('treeContainer');
+            let html = '';
+            
+            const levelNames = ['一级属性', '二级属性', '三级属性', '四级属性', '五级属性'];
+            const levelColors = ['#1565c0', '#2e7d32', '#ef6c00', '#6a1b9a', '#c62828'];
+            
+            for (let level = 0; level < 5; level++) {
+                if (!tree[level]) continue;
+                
+                const availableAttrs = getAvailableAttrsForLevel(level);
+                
+                html += `<div class="tree-column ${availableAttrs.size === 0 ? 'hidden' : ''}">`;
+                html += `<div class="tree-column-title" style="background: ${levelColors[level]}">${levelNames[level]}</div>`;
+                html += `<div class="tree-items">`;
+                
+                Object.entries(tree[level]).sort((a, b) => b[1] - a[1]).forEach(([attr, count]) => {
+                    const isSelected = selectedFilters.some(f => f.level === level && f.attr === attr);
+                    const isAvailable = availableAttrs.has(attr);
+                    
+                    html += `<div class="tree-item level-${level} ${isSelected ? 'selected' : ''} ${!isAvailable ? 'disabled' : ''}" onclick="${isAvailable ? `toggleFilter(${level}, '${attr}')` : ''}">
+                        ${attr}
+                        <span class="count">${count}</span>
+                    </div>`;
+                });
+                
+                html += `</div></div>`;
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        function toggleFilter(level, attr) {
+            const index = selectedFilters.findIndex(f => f.level === level && f.attr === attr);
+            if (index >= 0) {
+                // 取消选择时，同时取消后续级别的选择
+                const toRemove = selectedFilters.filter(f => f.level >= level);
+                toRemove.forEach(f => {
+                    const i = selectedFilters.indexOf(f);
+                    if (i >= 0) selectedFilters.splice(i, 1);
+                });
+                selectedFilters.push({ level, attr });
+            } else {
+                // 选择新项时，清除后续级别的选择
+                const toRemove = selectedFilters.filter(f => f.level > level);
+                toRemove.forEach(f => {
+                    const i = selectedFilters.indexOf(f);
+                    if (i >= 0) selectedFilters.splice(i, 1);
+                });
+                selectedFilters.push({ level, attr });
+            }
+            renderTree();
+            renderResults();
+        }
+        
+        function resetFilters() {
+            selectedFilters.length = 0;
+            renderTree();
+            renderResults();
+        }
+        
+        function renderResults() {
+            const filterTags = document.getElementById('filterTags');
+            const resultContent = document.getElementById('resultContent');
+            
+            if (selectedFilters.length === 0) {
+                filterTags.innerHTML = '';
+            } else {
+                const sorted = [...selectedFilters].sort((a, b) => a.level - b.level);
+                filterTags.innerHTML = '<div class="filter-tags">' + 
+                    sorted.map(f => `<div class="filter-tag">${f.attr}<span class="remove" onclick="removeFilter(${f.level})">×</span></div>`).join('') +
+                    '</div>';
+            }
+            
+            let pages = config.pages || [];
+            if (selectedFilters.length > 0) {
+                pages = pages.filter(page => {
+                    const attrs = parseAttributes(page.title);
+                    return selectedFilters.every(f => attrs.includes(f.attr));
+                });
+            }
+            
+            if (pages.length === 0) {
+                resultContent.innerHTML = '<div class="empty">暂无匹配的页面</div>';
+                return;
+            }
+            
+            let html = '<div class="result-grid">';
+            const refs = countSectionRefs();
+            
+            pages.forEach(page => {
+                const attrs = parseAttributes(page.title);
+                const refCount = refs[page.id] || 0;
+                
+                html += `<div class="result-card">
+                    <div class="result-card-id">${page.id}</div>
+                    <div class="result-card-title" contenteditable="true" onblur="updatePageTitle('${page.id}', this)" onkeydown="handleTitleKeydown(event, '${page.id}', this)">${page.title}</div>
+                    <div class="result-card-tags">`;
+                attrs.forEach((attr, index) => {
+                    html += `<span class="result-card-tag tag-level-${index}">${attr}</span>`;
+                });
+                html += `</div>`;
+                
+                if (refCount > 0) {
+                    html += `<div class="result-card-ref">被其他页面引用 ${refCount} 次</div>`;
+                }
+                
+                html += `<div class="result-card-actions">
+                    <a href="/admin/pages/sections/${page.id}" target="_blank" class="result-card-action-btn edit">编辑</a>
+                    <a href="/?page=${page.id}" target="_blank" class="result-card-action-btn view">查看</a>
+                    <button class="result-card-action-btn delete" onclick="deletePage('${page.id}')">删除</button>
+                </div>
+                </div>`;
+            });
+            html += '</div>';
+            
+            resultContent.innerHTML = html;
+        }
+        
+        function removeFilter(level) {
+            const index = selectedFilters.findIndex(f => f.level === level);
+            if (index >= 0) {
+                const toRemove = selectedFilters.filter(f => f.level >= level);
+                toRemove.forEach(f => {
+                    const i = selectedFilters.indexOf(f);
+                    if (i >= 0) selectedFilters.splice(i, 1);
+                });
+                renderTree();
+                renderResults();
+            }
+        }
+        
+        function deletePage(pageId) {
+            if (!confirm('确定要删除此页面吗？\n\n页面ID: ' + pageId + '\n\n此操作不可恢复！')) {
+                return;
+            }
+            
+            // 保存当前选中的过滤器
+            const savedFilters = JSON.parse(JSON.stringify(selectedFilters));
+            
+            fetch('/admin/pages/delete/' + pageId, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 刷新页面并恢复过滤器
+                    window.location.href = window.location.pathname + '?filters=' + encodeURIComponent(JSON.stringify(savedFilters));
+                } else {
+                    alert('删除失败: ' + (data.error || '未知错误'));
+                }
+            })
+            .catch(error => {
+                alert('删除失败: ' + error.message);
+            });
+        }
+        
+        function addNewPage() {
+            const title = prompt('请输入页面标题（属性用 - 分隔，例如：一级-二级-三级）：');
+            if (!title || !title.trim()) {
+                return;
+            }
+            
+            const pageId = 'page_' + Date.now();
+            
+            // 保存当前选中的过滤器
+            const savedFilters = JSON.parse(JSON.stringify(selectedFilters));
+            
+            fetch('/admin/pages/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'id=' + encodeURIComponent(pageId) + '&title=' + encodeURIComponent(title.trim())
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 刷新页面并恢复过滤器
+                    window.location.href = window.location.pathname + '?filters=' + encodeURIComponent(JSON.stringify(savedFilters));
+                } else {
+                    alert('创建失败: ' + (data.error || '未知错误'));
+                }
+            })
+            .catch(error => {
+                alert('创建失败: ' + error.message);
+            });
+        }
+        
+        function restoreFilters() {
+            // 从URL参数中恢复过滤器
+            const params = new URLSearchParams(window.location.search);
+            const filtersParam = params.get('filters');
+            if (filtersParam) {
+                try {
+                    const filters = JSON.parse(decodeURIComponent(filtersParam));
+                    selectedFilters.length = 0;
+                    filters.forEach(f => selectedFilters.push(f));
+                    // 清除URL参数
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                } catch (e) {
+                    console.error('恢复过滤器失败:', e);
+                }
+            }
+        }
+        
+        function updatePageTitle(pageId, element) {
+            const newTitle = element.textContent.trim();
+            if (!newTitle) {
+                alert('标题不能为空');
+                location.reload();
+                return;
+            }
+            
+            element.classList.add('editing');
+            
+            fetch('/admin/pages/update-title/' + pageId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'title=' + encodeURIComponent(newTitle)
+            })
+            .then(response => response.json())
+            .then(data => {
+                element.classList.remove('editing');
+                if (data.success) {
+                    renderTree();
+                } else {
+                    alert('更新失败: ' + (data.error || '未知错误'));
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                element.classList.remove('editing');
+                alert('更新失败: ' + error.message);
+                location.reload();
+            });
+        }
+        
+        function handleTitleKeydown(event, pageId, element) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                element.blur();
+            }
+            if (event.key === 'Escape') {
+                location.reload();
+            }
+        }
+        
+        restoreFilters();
+        renderTree();
+        renderResults();
+    </script>
+</body>
+</html>

@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分组管理（拖拽）</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .header {
+            background: linear-gradient(90deg, #3c8ce7 0%, #15c0eb 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header h1 { margin: 0; font-size: 24px; display: inline-block; }
+        .header .back { float: right; color: white; text-decoration: none; margin-top: 5px; }
+        .container { max-width: 1400px; margin: 20px auto; padding: 20px; }
+        .flash {
+            background-color: #d4edda; color: #155724; padding: 12px 18px;
+            border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #28a745;
+        }
+        .flash.error { background-color: #f8d7da; color: #721c24; border-left-color: #dc3545; }
+        .drag-layout {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+        /* ===== 左侧：分组树 ===== */
+        .groups-panel {
+            width: 42%;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .panel-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a2a4a;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn {
+            display: inline-block;
+            padding: 7px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn-primary { background: linear-gradient(90deg, #3c8ce7 0%, #15c0eb 100%); color: white; }
+        .btn-sm { padding: 4px 10px; font-size: 12px; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-secondary { background: #f8f9fa; color: #333; border: 1px solid #ddd; }
+        .btn-ghost { background: transparent; color: #8a94a6; border: 1px dashed #c8cdd6; }
+        .group-tree { max-height: 72vh; overflow-y: auto; }
+        .group-node { margin: 2px 0; }
+        .group-node-inner {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            cursor: grab;
+            background: #f8fafd;
+            transition: all 0.15s;
+        }
+        .group-node-inner:hover { border-color: #d0d7e2; }
+        .group-node-inner.dragging { opacity: 0.5; }
+        .group-node-inner.drop-target { border-color: #3c8ce7; background: #eaf3ff; }
+        .group-node-inner.drag-over-parent { border: 2px dashed #3c8ce7; background: #eaf3ff; }
+        .group-toggle {
+            width: 18px; height: 18px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #8a94a6; font-size: 11px;
+            border-radius: 4px; background: #eef0f4;
+        }
+        .group-toggle:hover { background: #dde3ec; }
+        .group-name {
+            flex: 1;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a2a4a;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .group-seq {
+            flex-shrink: 0;
+            min-width: 26px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #3c8ce7 0%, #15c0eb 100%);
+            border-radius: 12px;
+            padding: 2px 8px;
+        }
+        .group-count {
+            font-size: 11px;
+            color: #8a94a6;
+            background: #eef0f4;
+            border-radius: 10px;
+            padding: 1px 8px;
+            flex-shrink: 0;
+        }
+        .group-del {
+            flex-shrink: 0;
+            width: 22px; height: 22px;
+            border: none; border-radius: 5px;
+            background: transparent; color: #b0b7c2;
+            cursor: pointer; font-size: 13px; line-height: 1;
+        }
+        .group-del:hover { background: #fee2e2; color: #dc2626; }
+        .group-rename {
+            flex-shrink: 0;
+            width: 22px; height: 22px;
+            border: none; border-radius: 5px;
+            background: transparent; color: #b0b7c2;
+            cursor: pointer; font-size: 12px; line-height: 1;
+            padding: 0;
+        }
+        .group-rename:hover { background: #eef4fc; color: #3c8ce7; }
+        .group-children { margin-left: 18px; padding-left: 8px; border-left: 1px dashed #dde3ec; }
+        .group-node.collapsed .group-children { display: none; }
+        .group-node.collapsed .group-pages { display: none; }
+        .group-node.collapsed .drop-hint { display: none; }
+        .group-node.collapsed .group-toggle { transform: rotate(-90deg); }
+        .group-pages {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 6px 10px 4px 28px;
+        }
+        .mini-page {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            font-size: 12px;
+            border-radius: 20px;
+            background: #eef4fc;
+            color: #1E63B3;
+            border: 1px solid transparent;
+            cursor: grab;
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .mini-page.dragging { opacity: 0.5; }
+        .mini-page .mini-page-id { font-size: 10px; color: #8a94a6; }
+        .drop-hint {
+            border: 2px dashed #c8cdd6;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            color: #b0b7c2;
+            font-size: 12px;
+            margin: 4px 0 4px 28px;
+            display: none;
+        }
+        .drop-hint.active { display: block; border-color: #3c8ce7; color: #3c8ce7; background: #f0f6ff; }
+        /* ===== 右侧：页面卡片 ===== */
+        .pages-panel {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .page-toolbar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            padding: 8px 14px;
+            border: 1px solid #d8dde6;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+        .page-cards {
+            max-height: 72vh;
+            overflow-y: auto;
+        }
+        .page-block {
+            margin-bottom: 16px;
+            border: 1px solid #eef0f4;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .page-block-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 14px;
+            background: linear-gradient(90deg, #f0f6ff 0%, #fafbfc 100%);
+            border-bottom: 1px solid #eef0f4;
+        }
+        .page-block-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a2a4a;
+        }
+        .page-block-seq {
+            font-size: 11px;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #3c8ce7 0%, #15c0eb 100%);
+            border-radius: 10px;
+            padding: 1px 8px;
+        }
+        .page-block-count {
+            font-size: 11px;
+            color: #8a94a6;
+            margin-left: auto;
+        }
+        .page-block-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+            padding: 12px;
+        }
+        .page-block.collapsed .page-block-cards { display: none; }
+        .page-block-header { cursor: pointer; user-select: none; }
+        .page-block-toggle {
+            margin-left: auto;
+            font-size: 12px;
+            color: #8a94a6;
+            transition: transform 0.25s ease;
+            cursor: pointer;
+        }
+        .page-block.collapsed .page-block-toggle { transform: rotate(-90deg); }
+        .page-card {
+            border: 1px solid #e0e4ea;
+            border-radius: 10px;
+            padding: 12px 14px;
+            background: #fafbfc;
+            cursor: grab;
+            transition: all 0.15s;
+        }
+        .page-card:hover { border-color: #3c8ce7; box-shadow: 0 2px 8px rgba(60,140,231,0.15); }
+        .page-card.dragging { opacity: 0.5; }
+        .page-card .page-card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a2a4a;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .page-card .page-card-id { font-size: 11px; color: #8a94a6; margin-top: 3px; }
+        .page-card .page-card-group { font-size: 11px; color: #3c8ce7; margin-top: 3px; }
+        .page-card .page-card-seq {
+            float: right;
+            font-size: 11px;
+            font-weight: 700;
+            color: #fff;
+            background: #8a94a6;
+            border-radius: 10px;
+            padding: 1px 8px;
+        }
+        .page-card .page-card-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .page-card .page-card-actions a,
+        .page-card .page-card-actions button {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 5px;
+            border: 1px solid #d0d7e2;
+            background: #fff;
+            color: #374151;
+            cursor: pointer;
+            text-decoration: none;
+            line-height: 1.5;
+        }
+        .page-card .page-card-actions a:hover,
+        .page-card .page-card-actions button:hover {
+            border-color: #3c8ce7;
+            color: #3c8ce7;
+        }
+        .page-card .page-card-actions .act-danger:hover {
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+        .empty-tip { text-align: center; color: #b0b7c2; padding: 40px 10px; font-size: 13px; }
+        /* ===== 弹窗 ===== */
+        .modal-mask {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); z-index: 1000;
+            display: none; align-items: center; justify-content: center;
+        }
+        .modal-mask.show { display: flex; }
+        .modal {
+            background: white; border-radius: 12px; padding: 26px;
+            width: 400px; max-width: 90%;
+        }
+        .modal h3 { margin: 0 0 16px; color: #1a2a4a; }
+        .modal .form-group { margin-bottom: 14px; }
+        .modal label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+        .modal input[type="text"] {
+            width: 100%; padding: 9px 12px;
+            border: 1px solid #d8dde6; border-radius: 8px; font-size: 13px;
+        }
+        .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
+        .toast {
+            position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); color: white; padding: 10px 22px;
+            border-radius: 20px; font-size: 13px; z-index: 2000;
+            display: none;
+        }
+        .toast.show { display: block; animation: fadeIn 0.2s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .drag-guide {
+            background: #fffbe8; border: 1px solid #ffe58f; border-radius: 8px;
+            padding: 10px 14px; font-size: 12px; color: #7a6a00; margin-bottom: 14px;
+            line-height: 1.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>分组管理（拖拽）</h1>
+        <a href="{{ url_for('admin') }}" class="back">返回首页</a>
+    </div>
+
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash {% if '不能' in message or '无法' in message %}error{% endif %}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="drag-guide">
+            🖱 <b>拖拽说明</b>：右侧<b>页面卡片</b>拖到左侧<b>分组</b>上 = 移入该分组；左侧<b>分组</b>拖到另一个<b>分组</b>上 = 设为子分组（嵌套）；
+            分组拖到右侧空白区 = 提升为顶级分组；分组内的<b>小页面标签</b>可拖到其他分组。分组标题旁「＋」可创建子分组。
+        </div>
+
+        <div class="drag-layout">
+            <!-- 左侧：分组树 -->
+            <div class="groups-panel">
+                <div class="panel-title">
+                    <span>📂 分组（可嵌套）</span>
+                    <button class="btn btn-primary" onclick="openCreateGroup('')">＋ 创建分组</button>
+                </div>
+                <div class="group-tree" id="groupTree">
+                    <div class="empty-tip">加载中…</div>
+                </div>
+            </div>
+
+            <!-- 右侧：页面卡片 -->
+            <div class="pages-panel">
+                <div class="panel-title">
+                    <span>📄 页面（拖到左侧分组）</span>
+                    <span style="font-size:12px;color:#8a94a6;" id="pageTotal"></span>
+                </div>
+                <div class="page-toolbar">
+                    <input type="text" class="search-box" id="pageSearch" placeholder="搜索页面ID或标题…" oninput="filterPages(this.value)">
+                </div>
+                <div class="page-cards" id="pageCards"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建分组弹窗 -->
+    <div class="modal-mask" id="createModal">
+        <div class="modal">
+            <h3 id="createModalTitle">创建分组</h3>
+            <div class="form-group">
+                <label>分组ID（可选，留空自动生成）</label>
+                <input type="text" id="newGroupId" placeholder="留空自动生成，如 g_ab12cd34">
+            </div>
+            <div class="form-group">
+                <label>分组名称</label>
+                <input type="text" id="newGroupName" placeholder="如：新分组">
+            </div>
+            <div class="form-group">
+                <label>描述（可选）</label>
+                <input type="text" id="newGroupDesc" placeholder="描述">
+            </div>
+            <input type="hidden" id="newGroupParent">
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeModal('createModal')">取消</button>
+                <button class="btn btn-primary" onclick="doCreateGroup()">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let TREE = [];       // 分组树
+        let ALL_PAGES = [];  // 所有页面
+        const CURRENT_DOMAIN = {{ current_domain|tojson }};
+
+        // ===== 加载数据 =====
+        function loadTree() {
+            const el = document.getElementById('groupTree');
+            fetch('/api/groups/tree')
+            .then(r => r.json())
+            .then(data => {
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                    return;
+                }
+                if (!data.success) {
+                    el.innerHTML = '<div class="empty-tip">加载失败：' + (data.error || '未知错误') + '</div>';
+                    return;
+                }
+                TREE = data.groups;
+                ALL_PAGES = data.pages;
+                renderTree();
+                renderPages();
+            })
+            .catch(err => {
+                el.innerHTML = '<div class="empty-tip">加载失败：' + err.message + '</div>';
+            });
+        }
+
+        // ===== 渲染分组树 =====
+        let GROUP_SEQ_MAP = {}; // groupId -> 序号（如 "1", "1.1"）
+        let COLLAPSED_SET = new Set(); // 记录被收起的分组ID，重新渲染后保持状态
+
+        function renderTree() {
+            const el = document.getElementById('groupTree');
+            if (!TREE.length) {
+                el.innerHTML = '<div class="empty-tip">暂无分组，点击上方「创建分组」</div>';
+                return;
+            }
+            GROUP_SEQ_MAP = {};
+            el.innerHTML = TREE.map(node => renderGroupNode(node, 0, '')).join('');
+        }
+
+        // 按树层级编号：顶级 1,2,3...；子分组 1.1, 1.2...
+        function renderGroupNode(node, depth, parentSeq) {
+            const siblings = parentSeq ? null : TREE; // 仅顶层需要父级列表以计算序号
+            // 计算本组在同级中的序号
+            let seq;
+            if (!parentSeq) {
+                // 顶层：按 TREE 中位置
+                const idx = TREE.indexOf(node);
+                seq = String(idx + 1);
+            } else {
+                const parentNode = findGroupById(parentSeq ? node.parent : '');
+                const siblings2 = parentNode ? (parentNode.children || []) : [];
+                const idx = siblings2.indexOf(node);
+                seq = parentSeq + '.' + (idx + 1);
+            }
+            GROUP_SEQ_MAP[node.id] = seq;
+
+            const pagesHtml = (node.pages || []).map((p, pi) => `
+                <span class="mini-page" draggable="true"
+                      ondragstart="dragStartPage(event, '${escAttr(p.id)}')"
+                      ondragend="dragEnd(event)"
+                      onclick="openPagePreview('${escAttr(p.id)}')"
+                      title="点击预览：${escAttr(p.title)}（拖动可移入其他分组）">
+                    ${escHtml(p.title)}
+                    <span class="mini-page-id">${escHtml(p.id)}</span>
+                </span>`).join('');
+
+            const childrenHtml = (node.children || []).map(c => renderGroupNode(c, depth + 1, seq)).join('');
+
+            // 若该分组处于收起状态，渲染时保留 collapsed（重新加载/移动后不自动展开）
+            const collapsedClass = COLLAPSED_SET.has(node.id) ? ' collapsed' : '';
+
+            return `
+            <div class="group-node${collapsedClass}" data-group-id="${escAttr(node.id)}">
+                <div class="group-node-inner"
+                     draggable="true"
+                     ondragstart="dragStartGroup(event, '${escAttr(node.id)}')"
+                     ondragend="dragEnd(event)"
+                     ondragover="dragOverGroup(event)"
+                     ondragleave="dragLeaveGroup(event)"
+                     ondrop="dropOnGroup(event, '${escAttr(node.id)}')">
+                    <span class="group-seq">${seq}</span>
+                    <span class="group-toggle" onclick="toggleGroup(this, event)">▼</span>
+                    <span class="group-name">${escHtml(node.name)}</span>
+                    <button class="group-rename" onclick="renameGroup('${escAttr(node.id)}', event)" title="修改分组名称">✏️</button>
+                    <span class="group-count">${(node.pages||[]).length + (node.children||[]).length}</span>
+                    <button class="btn btn-primary btn-sm" style="padding:2px 8px;"
+                            onclick="openCreateGroup('${escAttr(node.id)}')" title="在此分组下创建子分组">＋</button>
+                    ${node.id !== 'default' ? `<button class="group-del" onclick="deleteGroup('${escAttr(node.id)}')" title="删除分组">&times;</button>` : ''}
+                </div>
+                <div class="group-children">${childrenHtml}</div>
+                <div class="group-pages">${pagesHtml}</div>
+                <div class="drop-hint">松开移入此分组</div>
+            </div>`;
+        }
+
+        function findGroupById(gid) {
+            let found = null;
+            (function walk(nodes) {
+                for (const n of nodes) {
+                    if (n.id === gid) { found = n; return; }
+                    if (n.children) walk(n.children);
+                }
+            })(TREE);
+            return found;
+        }
+
+        // ===== 渲染页面卡片（按分组分块） =====
+        let PAGE_BLOCK_COLLAPSED = new Set(); // 记录右侧被收起的分块ID，重渲染后保持状态
+
+        function renderPages() {
+            const el = document.getElementById('pageCards');
+            document.getElementById('pageTotal').textContent = `共 ${ALL_PAGES.length} 个页面`;
+            if (!ALL_PAGES.length) {
+                el.innerHTML = '<div class="empty-tip">暂无页面</div>';
+                return;
+            }
+
+            // 1) 收集每个分组的页面（用分组树顺序，未分组放最后）
+            const groupsWithPages = [];
+            (function walk(nodes) {
+                for (const n of nodes) {
+                    const gPages = ALL_PAGES.filter(p => p.groupId === n.id);
+                    if (gPages.length) {
+                        groupsWithPages.push({ group: n, pages: gPages });
+                    }
+                    if (n.children) walk(n.children);
+                }
+            })(TREE);
+            const ungrouped = ALL_PAGES.filter(p => !findGroupById(p.groupId));
+            if (ungrouped.length) {
+                groupsWithPages.push({ group: null, pages: ungrouped });
+            }
+
+            let html = '';
+            groupsWithPages.forEach(blk => {
+                const g = blk.group;
+                const seq = g ? (GROUP_SEQ_MAP[g.id] || '') : '0';
+                const blockId = g ? g.id : 'ungrouped';
+                const collapsedClass = PAGE_BLOCK_COLLAPSED.has(blockId) ? ' collapsed' : '';
+                html += `
+                <div class="page-block${collapsedClass}" data-block-id="${escAttr(blockId)}">
+                    <div class="page-block-header" onclick="togglePageBlock('${escAttr(blockId)}', event)">
+                        <span class="page-block-title">${g ? escHtml(g.name) : '未分组'}</span>
+                        <span class="page-block-seq">${seq}</span>
+                        <span class="page-block-count">${blk.pages.length} 页</span>
+                        <span class="page-block-toggle">▼</span>
+                    </div>
+                    <div class="page-block-cards">`;
+
+                let counter = 0;
+                blk.pages.forEach(p => {
+                    counter += 1;
+                    const seqText = seq ? (seq + '.' + counter) : ('0.' + counter);
+                    const pageUrl = CURRENT_DOMAIN + '/index-dynamic.html?page=' + encodeURIComponent(p.id);
+                    html += `
+                    <div class="page-card" draggable="true"
+                         data-page-id="${escAttr(p.id)}"
+                         data-search="${escAttr(p.id + ' ' + p.title)}"
+                         ondragstart="dragStartPage(event, '${escAttr(p.id)}')"
+                         ondragend="dragEnd(event)"
+                         title="拖到左侧分组">
+                        <div class="page-card-title" onclick="renamePage('${escAttr(p.id)}', '${escAttr(p.title)}')" title="点击修改页面名称" style="cursor:pointer;">${escHtml(p.title)}</div>
+                        <div class="page-card-id">${escHtml(p.id)}</div>
+                        <div class="page-card-group">${g ? escHtml(g.name) : '未分组'}</div>
+                        <div class="page-card-seq">${seqText}</div>
+                        <div class="page-card-actions">
+                            <a href="/admin/pages/sections/${encodeURIComponent(p.id)}" target="_blank" title="编辑内容区块">✏️ 编辑</a>
+                            <button type="button" onclick="renamePage('${escAttr(p.id)}')" title="修改页面名称">🏷 改名</button>
+                            <a href="${pageUrl}" target="_blank" title="打开演示">👁 演示</a>
+                            <a href="${pageUrl}${pageUrl.includes('?') ? '&' : '?'}dev=1&token=wswwsw1234" target="_blank" title="开发者预览模式">🛠️ 开发者预览</a>
+                            <button type="button" onclick="copyPageLink('${encodeURIComponent(p.id)}')" title="复制引用链接">🔗 复制</button>
+                            <button type="button" onclick="duplicatePage('${escAttr(p.id)}')" title="创建页面副本">📋 复制</button>
+                            <button type="button" class="act-danger" onclick="deletePage('${escAttr(p.id)}')" title="删除页面">🗑 删除</button>
+                        </div>
+                    </div>`;
+                });
+
+                html += `</div></div>`;
+            });
+            el.innerHTML = html;
+        }
+
+        // ===== 右侧分组分块折叠 =====
+        function togglePageBlock(blockId, e) {
+            if (e && e.stopPropagation) e.stopPropagation();
+            const block = document.querySelector(`.page-block[data-block-id="${blockId}"]`);
+            if (!block) return;
+            block.classList.toggle('collapsed');
+            if (block.classList.contains('collapsed')) {
+                PAGE_BLOCK_COLLAPSED.add(blockId);
+            } else {
+                PAGE_BLOCK_COLLAPSED.delete(blockId);
+            }
+        }
+
+        function filterPages(keyword) {
+            const kw = keyword.trim().toLowerCase();
+            document.querySelectorAll('.page-block').forEach(block => {
+                let anyVisible = false;
+                block.querySelectorAll('.page-card').forEach(card => {
+                    const hay = (card.dataset.search || '').toLowerCase();
+                    const show = !kw || hay.includes(kw);
+                    card.style.display = show ? '' : 'none';
+                    if (show) anyVisible = true;
+                });
+                // 搜索时隐藏空分组块
+                block.style.display = anyVisible ? '' : 'none';
+            });
+        }
+
+        // ===== 折叠/展开 =====
+        function toggleGroup(toggleEl, e) {
+            if (e && e.stopPropagation) e.stopPropagation();
+            const node = toggleEl.closest('.group-node');
+            if (!node) return;
+            node.classList.toggle('collapsed');
+            const gid = node.dataset.groupId;
+            if (node.classList.contains('collapsed')) {
+                COLLAPSED_SET.add(gid);
+            } else {
+                COLLAPSED_SET.delete(gid);
+            }
+        }
+
+        // ===== 拖拽：页面 =====
+        let DRAG_TYPE = null; // 'page' | 'group'
+        let DRAG_ID = null;
+
+        function dragStartPage(e, pageId) {
+            DRAG_TYPE = 'page';
+            DRAG_ID = pageId;
+            e.dataTransfer.setData('text/plain', pageId);
+            e.target.closest('[draggable="true"]').classList.add('dragging');
+            document.querySelectorAll('.drop-hint').forEach(h => h.classList.add('active'));
+            // 拖动页面时保持左侧分组当前收起/展开状态，不做任何变化
+        }
+
+        function dragStartGroup(e, groupId) {
+            DRAG_TYPE = 'group';
+            DRAG_ID = groupId;
+            e.dataTransfer.setData('text/plain', groupId);
+            e.target.closest('.group-node-inner').classList.add('dragging');
+            // 高亮所有分组为可放置目标
+            document.querySelectorAll('.group-node-inner').forEach(n => n.classList.add('drag-over-parent'));
+        }
+
+        function dragEnd(e) {
+            document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+            document.querySelectorAll('.drop-hint').forEach(h => h.classList.remove('active'));
+            document.querySelectorAll('.group-node-inner').forEach(n => {
+                n.classList.remove('drag-over-parent');
+                n.classList.remove('drop-target');
+            });
+            DRAG_TYPE = null;
+            DRAG_ID = null;
+        }
+
+        function dragOverGroup(e) {
+            e.preventDefault();
+            const inner = e.target.closest('.group-node-inner');
+            if (inner) inner.classList.add('drop-target');
+        }
+
+        function dragLeaveGroup(e) {
+            const inner = e.target.closest('.group-node-inner');
+            if (inner) inner.classList.remove('drop-target');
+        }
+
+        // 拖放到分组上
+        function dropOnGroup(e, groupId) {
+            e.preventDefault();
+            e.stopPropagation();
+            const inner = e.target.closest('.group-node-inner');
+            if (inner) inner.classList.remove('drop-target');
+
+            if (DRAG_TYPE === 'page') {
+                movePage(DRAG_ID, groupId);
+            } else if (DRAG_TYPE === 'group') {
+                moveGroup(DRAG_ID, groupId);
+            }
+            dragEnd(e);
+        }
+
+        // ===== 右侧空白区：分组拖入 =====
+        document.addEventListener('dragover', (e) => {
+            // 非分组/页面元素上禁止默认
+        });
+        // 将分组拖到右侧面板空白处 = 提升为顶级
+        (function(){
+            const pagesPanel = document.querySelector('.pages-panel');
+            pagesPanel.addEventListener('dragover', (e) => {
+                if (DRAG_TYPE === 'group' && !e.target.closest('.group-node-inner')) {
+                    e.preventDefault();
+                }
+            });
+            pagesPanel.addEventListener('drop', (e) => {
+                if (DRAG_TYPE === 'group' && !e.target.closest('.group-node-inner')) {
+                    e.preventDefault();
+                    moveGroup(DRAG_ID, '');
+                    dragEnd(e);
+                }
+            });
+        })();
+
+        // ===== API 调用 =====
+        function apiPost(url, body) {
+            return fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            }).then(r => r.json()).then(data => {
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                    throw new Error('未登录');
+                }
+                return data;
+            });
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => t.classList.remove('show'), 2000);
+        }
+
+        function movePage(pageId, groupId) {
+            apiPost('/api/pages/move', { pageId, groupId }).then(data => {
+                if (data.success) {
+                    showToast('页面已移入分组');
+                    loadTree();
+                } else {
+                    showToast(data.error || '移动失败');
+                }
+            });
+        }
+
+        function moveGroup(groupId, parent) {
+            apiPost('/api/groups/move', { id: groupId, parent }).then(data => {
+                if (data.success) {
+                    showToast(parent ? '分组已嵌套' : '分组已移至顶级');
+                    loadTree();
+                } else {
+                    showToast(data.error || '移动失败');
+                }
+            });
+        }
+
+        // ===== 页面操作 =====
+        // 修改页面名称
+        function renamePage(pageId, oldTitle) {
+            const newTitle = prompt('修改页面名称：', oldTitle || '');
+            if (newTitle === null) return; // 取消
+            const title = newTitle.trim();
+            if (!title) { showToast('页面名称不能为空'); return; }
+            fetch('/admin/pages/update-title/' + encodeURIComponent(pageId), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title })
+            })
+            .then(r => r.json())
+            .then(data => {
+                showToast(data.success ? '页面名称已更新' : (data.error || '更新失败'));
+                if (data.success) loadTree();
+            })
+            .catch(() => showToast('更新失败'));
+        }
+
+        // 点击左侧分组内页面标签 → 新窗口打开预览
+        function openPagePreview(pid) {
+            window.open(CURRENT_DOMAIN + '/index-dynamic.html?page=' + encodeURIComponent(pid), '_blank');
+        }
+
+        // 复制引用链接
+        function copyPageLink(pid) {
+            const url = CURRENT_DOMAIN + '/index-dynamic.html?page=' + pid;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(() => showToast('引用链接已复制'));
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = url;
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); showToast('引用链接已复制'); }
+                catch (e) { prompt('复制引用链接：', url); }
+                document.body.removeChild(ta);
+            }
+        }
+
+        // 创建页面副本（现有路由 /admin/pages/copy/<page_id>）
+        function duplicatePage(pageId) {
+            if (!confirm('确定创建该页面的副本吗？')) return;
+            fetch('/admin/pages/copy/' + encodeURIComponent(pageId), { method: 'POST' })
+            .then(r => r.redirected ? Promise.resolve(r) : r.text())
+            .then(() => {
+                showToast('页面副本已创建');
+                setTimeout(() => loadTree(), 500);
+            })
+            .catch(() => showToast('创建副本失败'));
+        }
+
+        // 删除页面（现有路由 /admin/pages/delete/<page_id>）
+        function deletePage(pageId) {
+            if (!confirm('确定要删除该页面吗？此操作不可恢复！')) return;
+            fetch('/admin/pages/delete/' + encodeURIComponent(pageId), { method: 'POST' })
+            .then(r => r.json())
+            .then(data => {
+                showToast(data.success ? '页面已删除' : (data.error || '删除失败'));
+                if (data.success) loadTree();
+            })
+            .catch(() => showToast('删除失败'));
+        }
+
+        // 修改分组名称
+        function renameGroup(groupId, e) {
+            if (e && e.stopPropagation) e.stopPropagation();
+            const node = document.querySelector(`.group-node[data-group-id="${groupId}"]`);
+            const oldName = node ? node.querySelector('.group-name').textContent : '';
+            const newName = prompt('修改分组名称：', oldName);
+            if (newName === null) return; // 取消
+            const name = newName.trim();
+            if (!name) { showToast('分组名称不能为空'); return; }
+            apiPost('/api/groups/rename', { id: groupId, name }).then(data => {
+                showToast(data.success ? '分组名称已更新' : (data.error || '更新失败'));
+                if (data.success) loadTree();
+            });
+        }
+
+        function deleteGroup(groupId) {
+            if (!confirm('确定删除该分组吗？（须为空分组）')) return;
+            apiPost('/api/groups/delete', { id: groupId }).then(data => {
+                showToast(data.success ? '分组已删除' : (data.error || '删除失败'));
+                if (data.success) loadTree();
+            });
+        }
+
+        // ===== 创建分组 =====
+        function openCreateGroup(parent) {
+            document.getElementById('newGroupParent').value = parent || '';
+            document.getElementById('newGroupId').value = '';
+            document.getElementById('newGroupName').value = '';
+            document.getElementById('newGroupDesc').value = '';
+            document.getElementById('createModalTitle').textContent = parent ? '在分组下创建子分组' : '创建分组';
+            document.getElementById('createModal').classList.add('show');
+            setTimeout(() => document.getElementById('newGroupName').focus(), 100);
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
+        }
+
+        function doCreateGroup() {
+            const id = document.getElementById('newGroupId').value.trim();
+            const name = document.getElementById('newGroupName').value.trim();
+            const desc = document.getElementById('newGroupDesc').value.trim();
+            const parent = document.getElementById('newGroupParent').value;
+            if (!name) {
+                showToast('分组名称不能为空');
+                return;
+            }
+            apiPost('/api/groups/create', { id, name, description: desc, parent }).then(data => {
+                if (data.success) {
+                    showToast('分组创建成功');
+                    closeModal('createModal');
+                    loadTree();
+                } else {
+                    showToast(data.error || '创建失败');
+                }
+            });
+        }
+
+        // ===== 工具 =====
+        function escHtml(s) {
+            return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+        function escAttr(s) {
+            return escHtml(s).replace(/'/g, '&#39;');
+        }
+
+        // 点击弹窗遮罩关闭
+        document.querySelectorAll('.modal-mask').forEach(m => {
+            m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('show'); });
+        });
+
+        loadTree();
+    </script>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文旅页面 - 贴图示例</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .paste-area {
+            background: white;
+            border: 2px dashed #ccc;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            min-height: 300px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .paste-area:hover, .paste-area:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+        .paste-area.has-image {
+            border-style: solid;
+            padding: 20px;
+        }
+        .paste-hint {
+            color: #999;
+            font-size: 16px;
+        }
+        .paste-hint kbd {
+            background: #eee;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .preview-image {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .actions {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 0 5px;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+        .btn:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>文旅页面 - 贴图示例</h1>
+        
+        <!-- 贴图区域：点击获取焦点后按 Ctrl+V 粘贴图片 -->
+        <div class="paste-area" id="pasteArea" tabindex="0">
+            <div class="paste-hint" id="pasteHint">
+                点击此区域，然后按 <kbd>Ctrl</kbd> + <kbd>V</kbd> 粘贴图片
+            </div>
+            <img class="preview-image" id="previewImage" style="display: none;">
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-secondary" onclick="clearImage()">清除图片</button>
+            <button class="btn btn-primary" onclick="uploadImage()">上传示例（待实现）</button>
+        </div>
+    </div>
+
+    <script>
+        const pasteArea = document.getElementById('pasteArea');
+        const previewImage = document.getElementById('previewImage');
+        const pasteHint = document.getElementById('pasteHint');
+
+        // 监听粘贴事件
+        pasteArea.addEventListener('paste', function(e) {
+            const items = e.clipboardData.items;
+            
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    e.preventDefault();
+                    const blob = items[i].getAsFile();
+                    displayImage(blob);
+                    break;
+                }
+            }
+        });
+
+        // 显示图片
+        function displayImage(blob) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                previewImage.style.display = 'block';
+                pasteHint.style.display = 'none';
+                pasteArea.classList.add('has-image');
+            };
+            reader.readAsDataURL(blob);
+        }
+
+        // 清除图片
+        function clearImage() {
+            previewImage.src = '';
+            previewImage.style.display = 'none';
+            pasteHint.style.display = 'block';
+            pasteArea.classList.remove('has-image');
+        }
+
+        // 上传示例（预留接口）
+        function uploadImage() {
+            if (!previewImage.src) {
+                alert('请先粘贴一张图片');
+                return;
+            }
+            
+            /* 
+             * 上传示例代码：
+             * 
+             * const blob = dataURItoBlob(previewImage.src);
+             * const formData = new FormData();
+             * formData.append('image', blob, 'pasted-image.png');
+             * 
+             * fetch('/api/upload', {
+             *     method: 'POST',
+             *     body: formData
+             * })
+             * .then(res => res.json())
+             * .then(data => console.log('上传成功:', data))
+             * .catch(err => console.error('上传失败:', err));
+             * 
+             * // 辅助函数：DataURL 转 Blob
+             * function dataURItoBlob(dataURI) {
+             *     const byteString = atob(dataURI.split(',')[1]);
+             *     const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+             *     const ab = new ArrayBuffer(byteString.length);
+             *     const ia = new Uint8Array(ab);
+             *     for (let i = 0; i < byteString.length; i++) {
+             *         ia[i] = byteString.charCodeAt(i);
+             *     }
+             *     return new Blob([ab], { type: mimeString });
+             * }
+             */
+            
+            alert('上传功能待实现，请参考代码注释中的示例');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes">
+    <title>{{ filename }}</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .pdf-container {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: #ffffff;
+            -webkit-overflow-scrolling: touch;
+            box-sizing: border-box;
+        }
+        
+        .pdf-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+        }
+        
+        .pdf-page {
+            display: block;
+            background: white;
+            box-shadow: none;
+            margin-bottom: 4px;
+            touch-action: pan-x pan-y pinch-zoom;
+        }
+        
+        .loading {
+            color: #666;
+            font-size: 16px;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .error {
+            color: #ff6b6b;
+            font-size: 16px;
+            text-align: center;
+            padding: 40px 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="pdf-container" id="pdf-container">
+        <div class="pdf-wrapper" id="pdf-wrapper">
+            <div class="loading">正在加载PDF...</div>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        
+        const pdfUrl = '/uploads/{{ filename }}';
+        const container = document.getElementById('pdf-container');
+        const wrapper = document.getElementById('pdf-wrapper');
+        
+        let totalPages = 0;
+        let pages = [];
+        let currentZoom = 1;
+        let initialDistance = 0;
+        let initialZoom = 1;
+        let pageOriginalWidth = 0;
+        let pageOriginalHeight = 0;
+        let pageRenderedWidth = 0;
+        
+        function applyZoom(zoom) {
+            currentZoom = Math.max(0.5, Math.min(5, zoom));
+            
+            pages.forEach(page => {
+                page.style.width = (pageRenderedWidth * currentZoom) + 'px';
+                page.style.height = 'auto';
+            });
+        }
+        
+        function getDistance(touches) {
+            const dx = touches[0].clientX - touches[1].clientX;
+            const dy = touches[0].clientY - touches[1].clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+        
+        document.addEventListener('touchstart', function(e) {
+            if (e.touches.length === 2) {
+                initialDistance = getDistance(e.touches);
+                initialZoom = currentZoom;
+            }
+        }, { passive: true });
+        
+        document.addEventListener('touchmove', function(e) {
+            if (e.touches.length === 2) {
+                const currentDistance = getDistance(e.touches);
+                const scale = currentDistance / initialDistance;
+                applyZoom(initialZoom * scale);
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        async function renderPDF() {
+            try {
+                const pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
+                totalPages = pdfDoc.numPages;
+                
+                const screenWidth = container.clientWidth - 20;
+                
+                const firstPage = await pdfDoc.getPage(1);
+                const viewport = firstPage.getViewport({scale: 1.0});
+                
+                pageOriginalWidth = viewport.width;
+                pageOriginalHeight = viewport.height;
+                
+                const fitZoom = screenWidth / pageOriginalWidth;
+                const dpr = window.devicePixelRatio || 1;
+                const renderScale = fitZoom * dpr;
+                
+                pages = [];
+                wrapper.innerHTML = '';
+                
+                for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+                    const page = await pdfDoc.getPage(pageNum);
+                    const pageViewport = page.getViewport({scale: renderScale});
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.className = 'pdf-page';
+                    canvas.width = pageViewport.width;
+                    canvas.height = pageViewport.height;
+                    canvas.style.width = (pageViewport.width / dpr) + 'px';
+                    canvas.style.height = (pageViewport.height / dpr) + 'px';
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    
+                    await page.render({canvasContext: ctx, viewport: pageViewport}).promise;
+                    
+                    pages.push(canvas);
+                    wrapper.appendChild(canvas);
+                }
+                
+                pageRenderedWidth = screenWidth;
+                currentZoom = 1;
+                
+            } catch (error) {
+                console.error('PDF加载错误:', error);
+                wrapper.innerHTML = '<div class="error">PDF加载失败</div>';
+            }
+        }
+        
+        window.addEventListener('resize', () => location.reload());
+        renderPDF();
+    </script>
+</body>
+</html>

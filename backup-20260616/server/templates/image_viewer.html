@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>图片查看</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            background: #ffffff;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+        }
+        .image-container-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .image-container {
+            position: relative;
+            touch-action: none;
+            user-select: none;
+            transform-origin: center center;
+        }
+        #image {
+            max-width: 90vw;
+            max-height: 90vh;
+            object-fit: contain;
+            touch-action: none;
+            user-select: none;
+        }
+        .close-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 48px;
+            height: 48px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            z-index: 100;
+            touch-action: manipulation;
+            padding: 0;
+        }
+        .close-btn:hover {
+            background: rgba(0, 0, 0, 0.7);
+        }
+        .info {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #666;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 8px 16px;
+            border-radius: 20px;
+            z-index: 100;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes zoomIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .image-container {
+            animation: zoomIn 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <button class="close-btn" onclick="closeViewer()">×</button>
+    <div class="image-container-wrapper">
+        <div class="image-container" id="imageContainer">
+            <img id="image" src="" alt="Image">
+        </div>
+    </div>
+    <div class="info" id="info">双击放大 / 双指缩放 / 拖动浏览</div>
+
+    <script>
+        let scale = 1;
+        let posX = 0;
+        let posY = 0;
+        let isDragging = false;
+        let lastTouchX = 0;
+        let lastTouchY = 0;
+        let touchStartDist = 0;
+        let touchStartScale = 1;
+        let lastTouchTime = 0;
+
+        const imageContainer = document.getElementById('imageContainer');
+        const image = document.getElementById('image');
+
+        const imgSrc = "/uploads/{{ filename }}";
+        if (imgSrc) {
+            image.src = imgSrc;
+        }
+
+        const updateTransform = () => {
+            imageContainer.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+        };
+
+        image.addEventListener('dblclick', (e) => {
+            e.preventDefault();
+            if (scale > 1) {
+                scale = 1;
+                posX = 0;
+                posY = 0;
+            } else {
+                scale = 2;
+            }
+            updateTransform();
+        });
+
+        image.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            scale = Math.max(0.5, Math.min(5, scale + delta));
+            updateTransform();
+        });
+
+        image.addEventListener('touchstart', (e) => {
+            const now = Date.now();
+            if (now - lastTouchTime < 300) {
+                if (scale > 1) {
+                    scale = 1;
+                    posX = 0;
+                    posY = 0;
+                } else {
+                    scale = 2;
+                }
+                updateTransform();
+                lastTouchTime = 0;
+                return;
+            }
+            lastTouchTime = now;
+
+            if (e.touches.length === 2) {
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                touchStartDist = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
+                touchStartScale = scale;
+            } else if (e.touches.length === 1) {
+                if (scale > 1) {
+                    isDragging = true;
+                    lastTouchX = e.touches[0].clientX - posX;
+                    lastTouchY = e.touches[0].clientY - posY;
+                }
+            }
+        }, { passive: true });
+
+        image.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2) {
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                const dist = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
+                const delta = dist / touchStartDist;
+                scale = Math.max(0.5, Math.min(5, touchStartScale * delta));
+                updateTransform();
+                e.preventDefault();
+            } else if (e.touches.length === 1 && isDragging) {
+                posX = e.touches[0].clientX - lastTouchX;
+                posY = e.touches[0].clientY - lastTouchY;
+                updateTransform();
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        image.addEventListener('touchend', (e) => {
+            isDragging = false;
+        }, { passive: true });
+
+        image.addEventListener('mousedown', (e) => {
+            if (scale > 1) {
+                isDragging = true;
+                lastTouchX = e.clientX - posX;
+                lastTouchY = e.clientY - posY;
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging && scale > 1) {
+                posX = e.clientX - lastTouchX;
+                posY = e.clientY - lastTouchY;
+                updateTransform();
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        function closeViewer() {
+            window.close();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeViewer();
+            }
+        });
+    </script>
+</body>
+</html>

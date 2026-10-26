@@ -1,0 +1,68 @@
+{
+  "basicInfo": {
+    "name": "谢达",
+    "title": "深圳市龙岗区坂田街道办事处",
+    "title2": "党工委副书记、办事处主任",
+    "phone": "18922878666",
+    "email": "szxieda@163.com",
+    "logo": "https://img.cdn1.vip/i/69a0748ac1626_1772123274.png",
+    "company": "深圳市龙岗区坂田街道办事处",
+    "address": ""
+  },
+  "pages": [
+    {
+      "id": "home",
+      "title": "首页",
+      "sections": [
+        {
+          "type": "contact",
+          "bgTheme": "theme-gold",
+          "contentTheme": "theme-orange-red",
+          "name": "aaa",
+          "title": "a",
+          "title2": "a",
+          "phone": "a",
+          "email": "a",
+          "logo": "http://119.145.17.34:8000/uploads/20260415_135359_52059763.png",
+          "company": "a",
+          "address": "a"
+        },
+        {
+          "type": "title",
+          "level": 2,
+          "title": "工作经历",
+          "color": "#667eea",
+          "logo": "http://119.145.17.34:8000/uploads/20260415_135359_52059763.png"
+        }
+      ],
+      "share_title": "sd",
+      "share_desc": "afasfsafasfasfasdafasf",
+      "share_icon": "http://119.145.17.34:8000/uploads/20260415_135359_52059763.png"
+    }
+  ],
+  "settings": {
+    "showCallConfirm": true,
+    "defaultPage": "home"
+  },
+  "currentPage": {
+    "id": "home",
+    "title": "首页",
+    "sections": [
+      {
+        "type": "title",
+        "level": 1,
+        "title": "个人简介",
+        "color": "#667eea"
+      },
+      {
+        "type": "title",
+        "level": 2,
+        "title": "工作经历",
+        "color": "#667eea"
+      }
+    ],
+    "share_title": "",
+    "share_desc": ""
+  },
+  "currentDomain": "http://localhost:5000"
+}

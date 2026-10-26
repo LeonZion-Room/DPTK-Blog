@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes">
+    <title>图片分格跳转</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f5f5f5;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        
+        .grid-wrapper {
+            position: relative;
+            max-width: 100%;
+            max-height: 80%;
+            background-color: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .grid-image {
+            display: block;
+            width: 100%;
+            height: auto;
+            pointer-events: none;
+        }
+        
+        .grid-overlay {
+            position: absolute;
+            top: {{ padding }}px;
+            left: {{ padding }}px;
+            right: {{ padding }}px;
+            bottom: {{ padding }}px;
+            display: grid;
+            grid-template-columns: repeat({{ grid_size }}, 1fr);
+            grid-template-rows: repeat({{ grid_size }}, 1fr);
+            gap: {{ gap }}px;
+        }
+        
+        .grid-cell {
+            cursor: pointer;
+            background-color: rgba(0, 122, 255, 0);
+            border-radius: 4px;
+            transition: background-color 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .grid-cell:hover {
+            background-color: rgba(0, 122, 255, 0.2);
+        }
+        
+        .grid-cell:active {
+            transform: scale(0.98);
+            background-color: rgba(0, 122, 255, 0.4);
+        }
+        
+        .grid-cell.has-link::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 8px;
+            height: 8px;
+            background-color: #34C759;
+            border-radius: 50%;
+        }
+        
+        .config-panel {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 320px;
+        }
+        
+        .config-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+        
+        .config-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .config-label {
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .config-input {
+            width: 80px;
+            padding: 6px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            text-align: center;
+        }
+        
+        .config-select {
+            padding: 6px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        .config-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .config-btn:active {
+            background-color: #0056b3;
+        }
+        
+        .link-manager {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 320px;
+            display: none;
+        }
+        
+        .link-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+        
+        .link-grid {
+            display: grid;
+            grid-template-columns: repeat({{ grid_size }}, 1fr);
+            gap: 5px;
+        }
+        
+        .link-cell {
+            aspect-ratio: 1;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #666;
+            transition: background-color 0.2s;
+            position: relative;
+        }
+        
+        .link-cell:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .link-cell.selected {
+            background-color: #007AFF;
+            color: white;
+        }
+        
+        .link-cell.has-url {
+            background-color: #e8f5e9;
+        }
+        
+        .link-cell.has-url.selected {
+            background-color: #34C759;
+        }
+        
+        .link-input-wrapper {
+            margin-top: 12px;
+        }
+        
+        .link-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            box-sizing: border-box;
+        }
+        
+        .link-save-btn {
+            width: 100%;
+            padding: 8px;
+            background-color: #34C759;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        
+        .link-save-btn:active {
+            background-color: #248a3d;
+        }
+        
+        .link-clear-btn {
+            width: 100%;
+            padding: 8px;
+            background-color: #f0f0f0;
+            color: #666;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        
+        .link-clear-btn:active {
+            background-color: #e0e0e0;
+        }
+        
+        .preview-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #ff9500;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        
+        .preview-btn:active {
+            background-color: #cc7700;
+        }
+        
+        .preview-mode .config-panel,
+        .preview-mode .link-manager {
+            display: none;
+        }
+        
+        .preview-mode .grid-wrapper {
+            max-height: 100%;
+        }
+        
+        .info-text {
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="container">
+        <div class="grid-wrapper" id="gridWrapper">
+            <img src="{{ image_url }}" alt="背景图片" class="grid-image" id="gridImage">
+            <div class="grid-overlay" id="gridOverlay"></div>
+        </div>
+        
+        <div class="config-panel" id="configPanel">
+            <div class="config-title">配置参数</div>
+            <div class="config-row">
+                <span class="config-label">网格大小</span>
+                <select class="config-select" id="gridSizeSelect">
+                    <option value="2">2×2</option>
+                    <option value="3" selected>3×3</option>
+                    <option value="4">4×4</option>
+                    <option value="5">5×5</option>
+                    <option value="6">6×6</option>
+                </select>
+            </div>
+            <div class="config-row">
+                <span class="config-label">边距 (px)</span>
+                <input type="number" class="config-input" id="paddingInput" value="10" min="0" max="50">
+            </div>
+            <div class="config-row">
+                <span class="config-label">间距 (px)</span>
+                <input type="number" class="config-input" id="gapInput" value="2" min="0" max="20">
+            </div>
+            <button class="config-btn" onclick="updateGrid()">应用配置</button>
+        </div>
+        
+        <div class="link-manager" id="linkManager">
+            <div class="link-title">设置跳转链接</div>
+            <div class="link-grid" id="linkGrid"></div>
+            <div class="link-input-wrapper">
+                <input type="text" class="link-input" id="urlInput" placeholder="输入跳转链接...">
+                <button class="link-save-btn" onclick="saveLink()">保存链接</button>
+                <button class="link-clear-btn" onclick="clearLink()">清除链接</button>
+            </div>
+        </div>
+        
+        <button class="preview-btn" onclick="togglePreview()">预览模式</button>
+        
+        <div class="info-text" id="infoText">点击格子区域跳转 | 绿色圆点表示已设置链接</div>
+    </div>
+    
+    <script>
+        const container = document.getElementById('container');
+        const gridWrapper = document.getElementById('gridWrapper');
+        const gridOverlay = document.getElementById('gridOverlay');
+        const gridImage = document.getElementById('gridImage');
+        const configPanel = document.getElementById('configPanel');
+        const linkManager = document.getElementById('linkManager');
+        const linkGrid = document.getElementById('linkGrid');
+        const gridSizeSelect = document.getElementById('gridSizeSelect');
+        const paddingInput = document.getElementById('paddingInput');
+        const gapInput = document.getElementById('gapInput');
+        const urlInput = document.getElementById('urlInput');
+        const infoText = document.getElementById('infoText');
+        
+        let gridSize = {{ grid_size }};
+        let padding = {{ padding }};
+        let gap = {{ gap }};
+        let selectedCell = null;
+        let cellLinks = {};
+        
+        function loadLinks() {
+            const saved = localStorage.getItem('imageGridLinks');
+            if (saved) {
+                cellLinks = JSON.parse(saved);
+            }
+        }
+        
+        function saveLinks() {
+            localStorage.setItem('imageGridLinks', JSON.stringify(cellLinks));
+        }
+        
+        function createGridOverlay() {
+            gridOverlay.innerHTML = '';
+            
+            for (let row = 0; row < gridSize; row++) {
+                for (let col = 0; col < gridSize; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    const key = `${row}-${col}`;
+                    cell.dataset.key = key;
+                    
+                    if (cellLinks[key]) {
+                        cell.classList.add('has-link');
+                        cell.addEventListener('click', () => {
+                            if (!container.classList.contains('preview-mode')) return;
+                            window.location.href = cellLinks[key];
+                        });
+                    }
+                    
+                    gridOverlay.appendChild(cell);
+                }
+            }
+            
+            updateGridStyle();
+        }
+        
+        function createLinkGrid() {
+            linkGrid.innerHTML = '';
+            
+            for (let row = 0; row < gridSize; row++) {
+                for (let col = 0; col < gridSize; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'link-cell';
+                    const key = `${row}-${col}`;
+                    cell.dataset.key = key;
+                    cell.textContent = `${row + 1},${col + 1}`;
+                    
+                    if (cellLinks[key]) {
+                        cell.classList.add('has-url');
+                    }
+                    
+                    if (selectedCell === key) {
+                        cell.classList.add('selected');
+                    }
+                    
+                    cell.addEventListener('click', () => {
+                        selectCell(key);
+                    });
+                    
+                    linkGrid.appendChild(cell);
+                }
+            }
+            
+            linkGrid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+        }
+        
+        function selectCell(key) {
+            const cells = linkGrid.querySelectorAll('.link-cell');
+            cells.forEach(c => c.classList.remove('selected'));
+            
+            const cell = linkGrid.querySelector(`[data-key="${key}"]`);
+            if (cell) {
+                cell.classList.add('selected');
+            }
+            
+            selectedCell = key;
+            
+            if (cellLinks[key]) {
+                urlInput.value = cellLinks[key];
+            } else {
+                urlInput.value = '';
+            }
+        }
+        
+        function saveLink() {
+            if (!selectedCell) {
+                alert('请先选择一个格子');
+                return;
+            }
+            
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                alert('请输入链接地址');
+                return;
+            }
+            
+            cellLinks[selectedCell] = url;
+            saveLinks();
+            updateLinkDisplay(selectedCell);
+            createGridOverlay();
+            
+            alert('链接已保存');
+        }
+        
+        function clearLink() {
+            if (!selectedCell) {
+                alert('请先选择一个格子');
+                return;
+            }
+            
+            delete cellLinks[selectedCell];
+            saveLinks();
+            urlInput.value = '';
+            updateLinkDisplay(selectedCell);
+            createGridOverlay();
+            
+            alert('链接已清除');
+        }
+        
+        function updateLinkDisplay(key) {
+            const cell = linkGrid.querySelector(`[data-key="${key}"]`);
+            if (cell) {
+                if (cellLinks[key]) {
+                    cell.classList.add('has-url');
+                } else {
+                    cell.classList.remove('has-url');
+                }
+            }
+        }
+        
+        function updateGridStyle() {
+            gridOverlay.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+            gridOverlay.style.gridTemplateRows = `repeat(${gridSize}, 1fr)`;
+            gridOverlay.style.gap = `${gap}px`;
+            gridOverlay.style.top = `${padding}px`;
+            gridOverlay.style.left = `${padding}px`;
+            gridOverlay.style.right = `${padding}px`;
+            gridOverlay.style.bottom = `${padding}px`;
+        }
+        
+        function updateGrid() {
+            gridSize = parseInt(gridSizeSelect.value);
+            padding = parseInt(paddingInput.value);
+            gap = parseInt(gapInput.value);
+            
+            createGridOverlay();
+            createLinkGrid();
+            
+            if (selectedCell) {
+                const [row, col] = selectedCell.split('-').map(Number);
+                if (row >= gridSize || col >= gridSize) {
+                    selectedCell = null;
+                    urlInput.value = '';
+                }
+            }
+        }
+        
+        function togglePreview() {
+            if (container.classList.contains('preview-mode')) {
+                container.classList.remove('preview-mode');
+                configPanel.style.display = 'block';
+                linkManager.style.display = 'block';
+                infoText.style.display = 'block';
+                event.target.textContent = '预览模式';
+            } else {
+                container.classList.add('preview-mode');
+                configPanel.style.display = 'none';
+                linkManager.style.display = 'none';
+                infoText.style.display = 'none';
+                event.target.textContent = '编辑模式';
+            }
+        }
+        
+        gridSizeSelect.addEventListener('change', () => {
+            linkManager.style.display = 'block';
+            updateGrid();
+        });
+        
+        loadLinks();
+        createGridOverlay();
+        createLinkGrid();
+    </script>
+</body>
+</html>

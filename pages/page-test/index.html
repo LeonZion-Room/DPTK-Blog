@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Test - 示例页面</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 16px;
+            font-size: 28px;
+        }
+        .badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 16px;
+        }
+        .info-box {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+        .info-box h3 {
+            color: #444;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .info-box code {
+            background: #e8e8e8;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .links {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        .links a {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: transform 0.2s;
+        }
+        .links a:hover { transform: translateY(-2px); }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        .time-display {
+            text-align: center;
+            color: #999;
+            font-size: 13px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <span class="badge">Pages 示例</span>
+        <h1>Page Test</h1>
+        <p>这是一个独立的 Pages 子页面，与主项目共享同一个后端服务。</p>
+        
+        <div class="info-box">
+            <h3>目录结构</h3>
+            <p>每个 <code>pages/page-xxx/</code> 文件夹都是一个独立站点，通过 <code>/pages/page-xxx/</code> 访问。</p>
+        </div>
+
+        <div class="info-box">
+            <h3>当前页面路径</h3>
+            <p><code>/pages/page-test/</code></p>
+        </div>
+
+        <div class="links">
+            <a href="/" class="btn-secondary">返回首页</a>
+            <a href="/pages/page-wenlv/" class="btn-primary">文旅页面</a>
+        </div>
+
+        <div class="time-display" id="time"></div>
+    </div>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('time').textContent = 
+                '当前时间: ' + now.toLocaleString('zh-CN');
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+</html>

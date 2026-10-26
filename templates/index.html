@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微信电子名片 - 开发者预览版</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .dev-node {
+            position: relative;
+            transition: all 0.2s;
+        }
+        .dev-mode .dev-node:hover {
+            outline: 2px dashed #3b82f6;
+            outline-offset: 2px;
+        }
+        .dev-badge {
+            display: none;
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #3b82f6;
+            color: white;
+            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: 4px;
+            z-index: 50;
+            pointer-events: none;
+        }
+        .dev-mode .dev-node:hover > .dev-badge,
+        .dev-mode .dev-badge-always {
+            display: block !important;
+        }
+        .clickable-resource {
+            cursor: pointer;
+        }
+        .dev-mode .clickable-resource:hover {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 min-h-screen text-gray-100 flex flex-col items-center justify-start py-6">
+
+    <!-- Top Dev Bar -->
+    <div id="devBar" class="w-full max-w-md bg-gray-800 px-4 py-2 mb-4 rounded-lg shadow flex justify-between items-center text-sm">
+        <span class="font-semibold text-blue-400">📱 微信电子名片预览</span>
+        <div class="space-x-2">
+            <button id="toggleDevBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs transition">
+                {{ '退出开发者视图' if is_dev else '开启开发者视图 (Dev)' }}
+            </button>
+            <a href="/admin/resource-replace" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs">一键替换资源</a>
+        </div>
+    </div>
+
+    <!-- Phone Container -->
+    <div class="w-full max-w-md bg-white text-gray-800 rounded-2xl shadow-2xl overflow-hidden min-h-[700px] flex flex-col relative" id="cardContainer">
+        
+        <!-- Rendered Components Content -->
+        <div id="renderRoot" class="flex-1 pb-16">
+            {% for comp in components %}
+                {% if comp.uid in mapping %}
+                    <div class="dev-node" data-uid="{{ comp.uid }}" data-type="{{ comp.type }}">
+                        <span class="dev-badge">ID: {{ comp.uid }}</span>
+                        
+                        {% if comp.type == 'profile' %}
+                        <!-- Profile Component -->
+                        <div class="relative bg-cover bg-center h-48 flex items-end p-4 clickable-resource" data-res-key="bgImage" data-res-url="{{ comp.data.bgImage }}" style="background-image: url('{{ comp.data.bgImage }}');">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                            <div class="relative z-10 flex items-center space-x-4">
+                                <img src="{{ comp.data.avatar }}" alt="头像" class="w-16 h-16 rounded-full border-2 border-white object-cover clickable-resource shadow-lg" data-res-key="avatar" data-res-url="{{ comp.data.avatar }}">
+                                <div>
+                                    <h2 class="text-xl font-bold text-white">{{ comp.data.name }}</h2>
+                                    <p class="text-xs text-blue-200">{{ comp.data.title }}</p>
+                                    <p class="text-xs text-gray-300">{{ comp.data.company }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-white space-y-3">
+                            <div class="flex justify-between items-center text-sm border-b pb-2">
+                                <span class="text-gray-500">电话</span>
+                                <a href="tel:{{ comp.data.phone }}" class="text-blue-600 font-semibold">{{ comp.data.phone }}</a>
+                            </div>
+                            <div class="flex justify-between items-center text-sm border-b pb-2">
+                                <span class="text-gray-500">邮箱</span>
+                                <span class="text-gray-800">{{ comp.data.email }}</span>
+                            </div>
+                            <button onclick="saveContact()" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 rounded-lg shadow text-center transition">
+                                📇 保存到通讯录
+                            </button>
+                        </div>
+
+                        {% elif comp.type == 'tabs' %}
+                        <!-- Multi-Tabs Component with Nested Children -->
+                        <div class="bg-gray-50 border-t border-b py-2">
+                            <div class="flex border-b bg-white px-2 space-x-2">
+                                {% for tab in comp.data.tabs %}
+                                <button onclick="switchTab('{{ comp.uid }}', '{{ tab.id }}')" class="tab-btn px-4 py-2 text-sm font-medium border-b-2 {{ 'border-blue-600 text-blue-600' if loop.first else 'border-transparent text-gray-500' }}" data-tab-target="{{ tab.id }}">
+                                    {{ tab.title }}
+                                </button>
+                                {% endfor %}
+                            </div>
+                            <div class="p-4">
+                                {% for tab in comp.data.tabs %}
+                                <div class="tab-content {{ 'block' if loop.first else 'hidden' }}" id="tab-{{ comp.uid }}-{{ tab.id }}">
+                                    {% for child in tab.children %}
+                                    <div class="dev-node bg-white p-3 rounded-lg shadow mb-3" data-uid="{{ child.uid }}" data-type="{{ child.type }}">
+                                        <span class="dev-badge">子组件: {{ child.uid }}</span>
+                                        
+                                        {% if child.type == 'text' %}
+                                        <h3 class="font-bold text-gray-800 mb-1">{{ child.data.title }}</h3>
+                                        <p class="text-sm text-gray-600 mb-2">{{ child.data.content }}</p>
+                                        {% if child.data.image %}
+                                        <img src="{{ child.data.image }}" class="w-full h-32 object-cover rounded clickable-resource" data-res-key="image" data-res-url="{{ child.data.image }}">
+                                        {% endif %}
+
+                                        {% elif child.type == 'card' %}
+                                        <div class="flex items-center space-x-3">
+                                            {% if child.data.logo %}
+                                            <img src="{{ child.data.logo }}" class="w-12 h-12 rounded object-cover clickable-resource" data-res-key="logo" data-res-url="{{ child.data.logo }}">
+                                            {% endif %}
+                                            <div>
+                                                <h4 class="font-bold text-sm text-gray-800">{{ child.data.title }}</h4>
+                                                <p class="text-xs text-gray-500">{{ child.data.desc }}</p>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        {% elif comp.type == 'text' %}
+                        <div class="p-4 bg-white">
+                            <h3 class="font-bold text-gray-800 mb-1">{{ comp.data.title }}</h3>
+                            <p class="text-sm text-gray-600 mb-2">{{ comp.data.content }}</p>
+                            {% if comp.data.image %}
+                            <img src="{{ comp.data.image }}" class="w-full h-36 object-cover rounded clickable-resource" data-res-key="image" data-res-url="{{ comp.data.image }}">
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Footer Branding -->
+        <div class="absolute bottom-0 inset-x-0 bg-gray-50 py-2 text-center text-xs text-gray-400 border-t">
+            Powered by LZ-TK-Station WeChat-Card
+        </div>
+    </div>
+
+    <!-- Resource Replace Modal -->
+    <div id="replaceModal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center hidden">
+        <div class="bg-white text-gray-800 rounded-xl max-w-sm w-full p-6 shadow-2xl relative">
+            <h3 class="text-lg font-bold mb-3">🔄 一键替换资源</h3>
+            <p class="text-xs text-gray-500 mb-2">当前资源链接：<span id="modalResUrl" class="font-mono text-blue-600 break-all"></span></p>
+            
+            <form id="modalForm" class="space-y-4">
+                <input type="hidden" id="modalLinkInput" name="link">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">选择新图片文件</label>
+                    <input type="file" id="modalFile" name="file" required class="w-full text-sm border border-gray-300 rounded p-1">
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeModal()" class="bg-gray-200 text-gray-700 px-3 py-1.5 rounded text-sm hover:bg-gray-300">取消</button>
+                    <button type="submit" class="bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700">确认替换</button>
+                </div>
+            </form>
+            <div id="modalStatus" class="mt-2 text-xs text-center hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        let isDev = {{ 'true' if is_dev else 'false' }};
+
+        function updateDevModeUI() {
+            const body = document.body;
+            const btn = document.getElementById('toggleDevBtn');
+            if (isDev) {
+                body.classList.add('dev-mode');
+                btn.textContent = '退出开发者视图';
+                btn.className = 'bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs transition';
+            } else {
+                body.classList.remove('dev-mode');
+                btn.textContent = '开启开发者视图 (Dev)';
+                btn.className = 'bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs transition';
+            }
+        }
+        updateDevModeUI();
+
+        document.getElementById('toggleDevBtn').addEventListener('click', () => {
+            isDev = !isDev;
+            updateDevModeUI();
+            const url = new URL(window.location);
+            if (isDev) url.searchParams.set('dev', '1');
+            else url.searchParams.delete('dev');
+            window.history.replaceState({}, '', url);
+        });
+
+        // Tab Switcher for Multi-Tabs Component
+        function switchTab(uid, tabId) {
+            const container = document.getElementById(`tab-${uid}-${tabId}`).parentElement;
+            container.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${uid}-${tabId}`).classList.remove('hidden');
+
+            const btnContainer = container.previousElementSibling;
+            btnContainer.querySelectorAll('.tab-btn').forEach(btn => {
+                if (btn.getAttribute('data-tab-target') === tabId) {
+                    btn.className = 'tab-btn px-4 py-2 text-sm font-medium border-b-2 border-blue-600 text-blue-600';
+                } else {
+                    btn.className = 'tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500';
+                }
+            });
+        }
+
+        function saveContact() {
+            window.location.href = '/api/contact-vcard';
+        }
+
+        // Clickable resources in Dev Mode -> Open Modal
+        document.querySelectorAll('.clickable-resource').forEach(el => {
+            el.addEventListener('click', (e) => {
+                if (!isDev) return;
+                e.stopPropagation();
+                const resUrl = el.getAttribute('data-res-url');
+                document.getElementById('modalResUrl').textContent = resUrl;
+                document.getElementById('modalLinkInput').value = resUrl;
+                document.getElementById('replaceModal').classList.remove('hidden');
+            });
+        });
+
+        function closeModal() {
+            document.getElementById('replaceModal').classList.add('hidden');
+            document.getElementById('modalStatus').classList.add('hidden');
+            document.getElementById('modalForm').reset();
+        }
+
+        document.getElementById('modalForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const statusDiv = document.getElementById('modalStatus');
+            statusDiv.classList.remove('hidden', 'text-green-600', 'text-red-600');
+            statusDiv.textContent = '正在替换中...';
+
+            try {
+                const resp = await fetch('/api/resource/replace', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await resp.json();
+                // 兼容新旧两种返回格式（{code:0,...} 或 {success:true,...}）
+                if (data.code === 0 || data.success === true) {
+                    statusDiv.className = 'mt-2 text-xs text-center text-green-600 font-bold';
+                    const verb = data.action === '新增' ? '上传' : '替换';
+                    statusDiv.textContent = `${verb}成功！即将刷新页面...`;
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    throw new Error(data.error || data.msg || '替换失败');
+                }
+            } catch (err) {
+                statusDiv.className = 'mt-2 text-xs text-center text-red-600 font-bold';
+                statusDiv.textContent = err.message;
+            }
+        });
+    </script>
+</body>
+</html>

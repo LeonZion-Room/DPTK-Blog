@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <title>微信电子名片 - 开发者预览版</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .dev-node {
+            position: relative;
+            transition: all 0.2s;
+        }
+        .dev-mode .dev-node:hover {
+            outline: 2px dashed #3b82f6;
+            outline-offset: 2px;
+        }
+        .dev-badge {
+            display: none;
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #3b82f6;
+            color: white;
+            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: 4px;
+            z-index: 50;
+            pointer-events: none;
+        }
+        .dev-mode .dev-node:hover > .dev-badge,
+        .dev-mode .dev-badge-always {
+            display: block !important;
+        }
+        .clickable-resource {
+            cursor: pointer;
+        }
+        .dev-mode .clickable-resource:hover {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 min-h-screen text-gray-100 flex flex-col items-center justify-start py-6">
+
+    <!-- Top Dev Bar -->
+    <div id="devBar" class="w-full max-w-md bg-gray-800 px-4 py-2 mb-4 rounded-lg shadow flex justify-between items-center text-sm">
+        <span class="font-semibold text-blue-400">📱 微信电子名片预览 (Page: {{ page_id }})</span>
+        <div class="space-x-2">
+            <button id="toggleDevBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs transition">
+                {{ '退出开发者视图' if is_dev else '开启开发者视图 (Dev)' }}
+            </button>
+            <a href="/admin" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-xs transition">📂 分组管理</a>
+            <a href="/admin/resource-replace" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs">🔄 资源替换</a>
+        </div>
+    </div>
+
+    <!-- Phone Container -->
+    <div class="w-full max-w-md bg-white text-gray-800 rounded-2xl shadow-2xl overflow-hidden min-h-[700px] flex flex-col relative" id="cardContainer">
+        
+        <!-- Rendered Components Content -->
+        <div id="renderRoot" class="flex-1 pb-16">
+            {% for comp in components %}
+                {% if comp.pageId == page_id %}
+                    <div class="dev-node" data-uid="{{ comp.uid }}" data-type="{{ comp.type }}">
+                        <span class="dev-badge">ID: {{ comp.uid }}</span>
+                        
+                        {% if comp.type == 'contact' %}
+                        <!-- Contact Component -->
+                        <div class="relative bg-cover bg-center h-48 flex items-end p-4 clickable-resource" data-res-key="logo" data-res-url="{{ comp.logo or '/static/assets/default_bg.jpg' }}" style="background-image: url('{{ comp.logo or '/static/assets/default_bg.jpg' }}');">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                            <div class="relative z-10 flex items-center space-x-4">
+                                <img src="{{ comp.logo or '/static/assets/default_avatar.png' }}" alt="头像" class="w-16 h-16 rounded-full border-2 border-white object-cover clickable-resource shadow-lg" data-res-key="logo" data-res-url="{{ comp.logo or '/static/assets/default_avatar.png' }}">
+                                <div>
+                                    <h2 class="text-xl font-bold text-white">{{ comp.name or '姓名' }}</h2>
+                                    <p class="text-xs text-blue-200">{{ comp.title or '职位' }}</p>
+                                    <p class="text-xs text-gray-300">{{ comp.company or '公司' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-white space-y-3">
+                            {% if comp.phone %}
+                            <div class="flex justify-between items-center text-sm border-b pb-2">
+                                <span class="text-gray-500">电话</span>
+                                <a href="tel:{{ comp.phone }}" class="text-blue-600 font-semibold">{{ comp.phone }}</a>
+                            </div>
+                            {% endif %}
+                            {% if comp.email %}
+                            <div class="flex justify-between items-center text-sm border-b pb-2">
+                                <span class="text-gray-500">邮箱</span>
+                                <span class="text-gray-800">{{ comp.email }}</span>
+                            </div>
+                            {% endif %}
+                            <button onclick="saveContact()" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 rounded-lg shadow text-center transition">
+                                📇 保存到通讯录
+                            </button>
+                        </div>
+
+                        {% elif comp.type == 'title' %}
+                        <!-- Title Component -->
+                        <div class="p-4 bg-white">
+                            <h{{ comp.level or 2 }} class="font-bold mb-1" style="color: {{ comp.color or '#333' }}">
+                                {{ comp.title or '标题' }}
+                            </h{{ comp.level or 2 }}>
+                            {% if comp.logo %}
+                            <img src="{{ comp.logo }}" class="w-full h-32 object-cover rounded clickable-resource mt-2" data-res-key="logo" data-res-url="{{ comp.logo }}">
+                            {% endif %}
+                        </div>
+
+                        {% elif comp.type == 'text' %}
+                        <!-- Text Component -->
+                        <div class="p-4 bg-white">
+                            <h3 class="font-bold text-gray-800 mb-1">{{ comp.title or '标题' }}</h3>
+                            <p class="text-sm text-gray-600 mb-2">{{ comp.content or '内容' }}</p>
+                            {% if comp.image %}
+                            <img src="{{ comp.image }}" class="w-full h-36 object-cover rounded clickable-resource" data-res-key="image" data-res-url="{{ comp.image }}">
+                            {% endif %}
+                        </div>
+
+                        {% elif comp.type == 'image' %}
+                        <!-- Image Component -->
+                        <div class="p-2 bg-white">
+                            {% if comp.url %}
+                            <img src="{{ comp.url }}" class="w-full object-cover rounded clickable-resource" data-res-key="url" data-res-url="{{ comp.url }}">
+                            {% endif %}
+                        </div>
+
+                        {% elif comp.type == 'video' %}
+                        <!-- Video Component -->
+                        <div class="p-2 bg-white">
+                            {% if comp.url %}
+                            <video src="{{ comp.url }}" controls class="w-full rounded clickable-resource" data-res-key="url" data-res-url="{{ comp.url }}"></video>
+                            {% endif %}
+                        </div>
+
+                        {% elif comp.type == 'pdf' %}
+                        <!-- PDF Component -->
+                        <div class="p-2 bg-white">
+                            {% if comp.url %}
+                            <iframe src="{{ comp.url }}" class="w-full h-96 rounded border clickable-resource" data-res-key="url" data-res-url="{{ comp.url }}"></iframe>
+                            {% endif %}
+                        </div>
+
+                        {% elif comp.type == 'tabs' %}
+                        <!-- Tabs Component -->
+                        <div class="bg-gray-50 border-t border-b py-2">
+                            <div class="flex border-b bg-white px-2 space-x-2 overflow-x-auto">
+                                {% if comp.tabs %}
+                                    {% for tab in comp.tabs %}
+                                    <button onclick="switchTab('{{ comp.uid }}', '{{ tab.id }}')" class="tab-btn px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap {{ 'border-blue-600 text-blue-600' if loop.first else 'border-transparent text-gray-500' }}" data-tab-target="{{ tab.id }}">
+                                        {{ tab.title or 'Tab' }}
+                                    </button>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% elif comp.type == 'carousel' %}
+                        <!-- Carousel Component -->
+                        <div class="p-2 bg-white">
+                            {% if comp.images %}
+                                {% for img in comp.images %}
+                                <img src="{{ img }}" class="w-full h-48 object-cover rounded mb-2 clickable-resource" data-res-key="images" data-res-url="{{ img }}">
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        {% elif comp.type == 'spacer' %}
+                        <!-- Spacer Component -->
+                        <div class="bg-gray-100" style="height: {{ comp.height or 20 }}px;"></div>
+
+                        {% elif comp.type == 'mapping' %}
+                        <!-- Mapping Component -->
+                        <div class="p-2 bg-white text-center text-xs text-gray-400">
+                            📍 地图组件
+                        </div>
+
+                        {% elif comp.type == 'imageButton' %}
+                        <!-- Image Button Component -->
+                        <div class="p-2 bg-white">
+                            {% if comp.url %}
+                            <a href="{{ comp.url }}" class="block">
+                                {% if comp.image %}
+                                <img src="{{ comp.image }}" class="w-full h-32 object-cover rounded clickable-resource" data-res-key="image" data-res-url="{{ comp.image }}">
+                                {% endif %}
+                            </a>
+                            {% endif %}
+                        </div>
+
+                        {% else %}
+                        <!-- Unknown Component Type -->
+                        <div class="p-4 bg-gray-100 text-center text-gray-500 text-sm">
+                            📦 {{ comp.type or '未知组件' }}
+                        </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Footer Branding -->
+        <div class="absolute bottom-0 inset-x-0 bg-gray-50 py-2 text-center text-xs text-gray-400 border-t">
+            Powered by LZ-TK-Station WeChat-Card
+        </div>
+    </div>
+
+    <!-- Resource Action Modal -->
+    <div id="actionModal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center hidden">
+        <div class="bg-white text-gray-800 rounded-xl max-w-sm w-full p-6 shadow-2xl relative">
+            <h3 class="text-lg font-bold mb-3">🎯 组件操作</h3>
+            <p class="text-xs text-gray-500 mb-2">组件：<span id="modalCompName" class="font-semibold text-gray-700"></span></p>
+            
+            <!-- Action Tabs -->
+            <div class="flex border-b mb-4">
+                <button onclick="switchActionTab('replace')" id="tabReplace" class="flex-1 py-2 text-sm font-medium border-b-2 border-blue-600 text-blue-600">📤 上传替换</button>
+                <button onclick="switchActionTab('copy')" id="tabCopy" class="flex-1 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500">📋 复制标签</button>
+            </div>
+            
+            <!-- Replace Tab -->
+            <div id="replaceTab" class="space-y-4">
+                <form id="modalForm">
+                    <input type="hidden" id="modalLinkInput" name="link">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">选择新文件</label>
+                        <input type="file" id="modalFile" name="file" required class="w-full text-sm border border-gray-300 rounded p-1">
+                        <p class="text-xs text-gray-400 mt-1">支持图片、视频、文档等资源文件</p>
+                    </div>
+                    <div class="flex justify-end space-x-2 pt-3">
+                        <button type="button" onclick="closeModal()" class="bg-gray-200 text-gray-700 px-3 py-1.5 rounded text-sm hover:bg-gray-300">取消</button>
+                        <button type="submit" class="bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700">确认替换</button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Copy Tab -->
+            <div id="copyTab" class="space-y-4 hidden">
+                <div class="bg-gray-900 text-green-400 rounded-lg p-3 text-xs font-mono overflow-auto max-h-40">
+                    <pre id="copyContent" class="whitespace-pre-wrap break-all"></pre>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="closeModal()" class="bg-gray-200 text-gray-700 px-3 py-1.5 rounded text-sm hover:bg-gray-300">取消</button>
+                    <button onclick="copyToClipboard()" class="bg-green-600 text-white px-3 py-1.5 rounded text-sm hover:bg-green-700">📋 复制到剪贴板</button>
+                </div>
+            </div>
+            
+            <div id="modalStatus" class="mt-2 text-xs text-center hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        // Token verification
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        const validToken = 'wswwsw1234';
+        
+        if (token !== validToken) {
+            document.body.innerHTML = `
+                <div class="min-h-screen bg-gray-900 flex items-center justify-center">
+                    <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md text-center">
+                        <div class="text-6xl mb-4">🔒</div>
+                        <h1 class="text-2xl font-bold text-gray-800 mb-2">访问受限</h1>
+                        <p class="text-gray-600 mb-4">您没有权限访问此页面，请联系管理员获取访问令牌。</p>
+                        <p class="text-sm text-gray-400">请使用正确的 token 参数访问</p>
+                    </div>
+                </div>
+            `;
+            throw new Error('Unauthorized access');
+        }
+
+        let isDev = {{ 'true' if is_dev else 'false' }};
+        let currentComponent = null;
+        let currentResUrl = '';
+
+        function updateDevModeUI() {
+            const body = document.body;
+            const btn = document.getElementById('toggleDevBtn');
+            if (isDev) {
+                body.classList.add('dev-mode');
+                btn.textContent = '退出开发者视图';
+                btn.className = 'bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs transition';
+            } else {
+                body.classList.remove('dev-mode');
+                btn.textContent = '开启开发者视图 (Dev)';
+                btn.className = 'bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs transition';
+            }
+        }
+        updateDevModeUI();
+
+        document.getElementById('toggleDevBtn').addEventListener('click', () => {
+            isDev = !isDev;
+            updateDevModeUI();
+            const url = new URL(window.location);
+            if (isDev) url.searchParams.set('dev', '1');
+            else url.searchParams.delete('dev');
+            window.history.replaceState({}, '', url);
+        });
+
+        function switchTab(uid, tabId) {
+            const container = document.getElementById(`tab-${uid}-${tabId}`).parentElement;
+            container.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${uid}-${tabId}`).classList.remove('hidden');
+
+            const btnContainer = container.previousElementSibling;
+            btnContainer.querySelectorAll('.tab-btn').forEach(btn => {
+                if (btn.getAttribute('data-tab-target') === tabId) {
+                    btn.className = 'tab-btn px-4 py-2 text-sm font-medium border-b-2 border-blue-600 text-blue-600 whitespace-nowrap';
+                } else {
+                    btn.className = 'tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 whitespace-nowrap';
+                }
+            });
+        }
+
+        function saveContact() {
+            window.location.href = '/api/contact-vcard';
+        }
+
+        // Action Modal Functions
+        function switchActionTab(tab) {
+            const replaceTab = document.getElementById('replaceTab');
+            const copyTab = document.getElementById('copyTab');
+            const tabReplace = document.getElementById('tabReplace');
+            const tabCopy = document.getElementById('tabCopy');
+            
+            if (tab === 'replace') {
+                replaceTab.classList.remove('hidden');
+                copyTab.classList.add('hidden');
+                tabReplace.className = 'flex-1 py-2 text-sm font-medium border-b-2 border-blue-600 text-blue-600';
+                tabCopy.className = 'flex-1 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500';
+            } else {
+                replaceTab.classList.add('hidden');
+                copyTab.classList.remove('hidden');
+                tabReplace.className = 'flex-1 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500';
+                tabCopy.className = 'flex-1 py-2 text-sm font-medium border-b-2 border-blue-600 text-blue-600';
+            }
+        }
+
+        // Generate copy content with ID and JSON
+        function generateCopyContent(el) {
+            const devNode = el.closest('.dev-node');
+            const uid = devNode?.dataset?.uid || el.dataset?.uid || 'unknown';
+            const type = devNode?.dataset?.type || el.dataset?.type || 'unknown';
+            const resKey = el.dataset?.resKey || '';
+            const resUrl = el.getAttribute('data-res-url') || '';
+            
+            const componentData = {
+                uid: uid,
+                type: type,
+                resourceKey: resKey,
+                resourceUrl: resUrl,
+                element: el.tagName?.toLowerCase() || 'unknown'
+            };
+            
+            return JSON.stringify(componentData, null, 2);
+        }
+
+        async function copyToClipboard() {
+            const textToCopy = document.getElementById('copyContent').textContent;
+            
+            try {
+                await navigator.clipboard.writeText(textToCopy);
+                const status = document.getElementById('modalStatus');
+                status.className = 'mt-2 text-xs text-center text-green-600 font-bold';
+                status.textContent = '✅ 已复制到剪贴板！';
+                status.classList.remove('hidden');
+                setTimeout(() => status.classList.add('hidden'), 2000);
+            } catch (err) {
+                const status = document.getElementById('modalStatus');
+                status.className = 'mt-2 text-xs text-center text-red-600 font-bold';
+                status.textContent = '复制失败，请手动复制';
+                status.classList.remove('hidden');
+            }
+        }
+
+        // Initialize clickable resources
+        document.querySelectorAll('.clickable-resource').forEach(el => {
+            el.addEventListener('click', (e) => {
+                if (!isDev) return;
+                e.stopPropagation();
+                
+                currentComponent = el;
+                currentResUrl = el.getAttribute('data-res-url');
+                
+                // Set component name
+                const compName = el.getAttribute('data-res-key') || '资源';
+                document.getElementById('modalCompName').textContent = compName;
+                
+                // Generate and display copy content
+                const copyContent = generateCopyContent(el);
+                document.getElementById('copyContent').textContent = copyContent;
+                
+                // Reset to replace tab
+                switchActionTab('replace');
+                
+                document.getElementById('actionModal').classList.remove('hidden');
+            });
+        });
+
+        function closeModal() {
+            document.getElementById('actionModal').classList.add('hidden');
+            document.getElementById('modalStatus').classList.add('hidden');
+            currentComponent = null;
+            currentResUrl = '';
+        }
+
+        document.getElementById('modalForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const statusDiv = document.getElementById('modalStatus');
+            statusDiv.classList.remove('hidden', 'text-green-600', 'text-red-600');
+            statusDiv.textContent = '正在替换中...';
+
+            try {
+                const resp = await fetch('/api/resource/replace', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await resp.json();
+                if (data.code === 0) {
+                    statusDiv.className = 'mt-2 text-xs text-center text-green-600 font-bold';
+                    statusDiv.textContent = '替换成功！即将刷新页面...';
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    throw new Error(data.msg || '替换失败');
+                }
+            } catch (err) {
+                statusDiv.className = 'mt-2 text-xs text-center text-red-600 font-bold';
+                statusDiv.textContent = err.message;
+            }
+        });
+    </script>
+</body>
+</html>

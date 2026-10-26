@@ -1,0 +1,17 @@
+{
+  "title": "微信名片",
+  "subtitle": "",
+  "description": "微信名片 - 林奕铮 出品",
+  "keywords": "微信名片",
+  "author": "Leon",
+  "logo": "/favicon-192.png",
+  "favicon": "/favicon-192.png",
+  "og_image": "/favicon-512.png",
+  "theme_color": "#1677ff",
+  "robots": "index,follow",
+  "canonical_url": "http://119.145.17.34:8000/",
+  "language": "zh-CN",
+  "copyright": "© 2026 Leon",
+  "site_name": "Leon Studio",
+  "extra_head": ""
+}

@@ -1,0 +1,123 @@
+{
+  "components": [
+    {
+      "uid": "sec_profile_01",
+      "type": "profile",
+      "name": "个人名片头部",
+      "data": {
+        "avatar": "https://img.cdn1.vip/i/69a0748ac1626_1772123274.png",
+        "name": "谢达",
+        "title": "深圳市龙岗区坂田街道办事处",
+        "title2": "党工委副书记、办事处主任",
+        "company": "深圳市龙岗区坂田街道办事处",
+        "phone": "18922878666",
+        "email": "szxieda@163.com",
+        "bgImage": "/static/assets/default_bg.jpg"
+      }
+    },
+    {
+      "uid": "sec_tabs_01",
+      "type": "tabs",
+      "name": "多标签分类导航",
+      "data": {
+        "activeTab": "tab1",
+        "tabs": [
+          {
+            "id": "tab1",
+            "title": "业务介绍",
+            "children": [
+              {
+                "uid": "sec_intro_01",
+                "type": "text",
+                "name": "业务简介",
+                "data": {
+                  "title": "智慧机房与投控数字化建设",
+                  "content": "专注于机房自动化巡检、SecOps 闭环、大屏可视化设计及企业数字化转型。",
+                  "image": "/static/assets/intro_banner.png"
+                }
+              }
+            ]
+          },
+          {
+            "id": "tab2",
+            "title": "产品案例",
+            "children": [
+              {
+                "uid": "sec_case_01",
+                "type": "card",
+                "name": "案例卡片",
+                "data": {
+                  "title": "LZ-Agent 自动化运维中心",
+                  "desc": "支持 SSH 跨节点执行器、工单系统、定时巡检。",
+                  "logo": "/static/assets/case_logo.png",
+                  "jumpUrl": "#"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "mapping": ["sec_profile_01", "sec_tabs_01"],
+  "pages": [
+    {
+      "id": "home",
+      "title": "首页",
+      "sections": [
+        {
+          "type": "contact",
+          "bgTheme": "theme-gold",
+          "contentTheme": "theme-orange-red",
+          "name": "谢达",
+          "title": "深圳市龙岗区坂田街道办事处",
+          "title2": "党工委副书记、办事处主任",
+          "phone": "18922878666",
+          "email": "szxieda@163.com",
+          "logo": "https://img.cdn1.vip/i/69a0748ac1626_1772123274.png",
+          "company": "深圳市龙岗区坂田街道办事处",
+          "address": ""
+        },
+        {
+          "type": "title",
+          "level": 2,
+          "title": "工作经历",
+          "color": "#667eea",
+          "logo": "http://119.145.17.34:8000/uploads/20260415_135359_52059763.png"
+        }
+      ],
+      "share_title": "谢达 - 深圳市龙岗区坂田街道办事处",
+      "share_desc": "党工委副书记、办事处主任",
+      "share_icon": "https://img.cdn1.vip/i/69a0748ac1626_1772123274.png"
+    },
+    {
+      "id": "yuchang",
+      "title": "预览权限",
+      "sections": [
+        {
+          "type": "contact",
+          "bgTheme": "theme-gold",
+          "contentTheme": "theme-orange-red",
+          "name": "谢达",
+          "title": "深圳市龙岗区坂田街道办事处",
+          "title2": "党工委副书记、办事处主任",
+          "phone": "18922878666",
+          "email": "szxieda@163.com",
+          "logo": "https://img.cdn1.vip/i/69a0748ac1626_1772123274.png",
+          "company": "深圳市龙岗区坂田街道办事处",
+          "address": ""
+        },
+        {
+          "type": "title",
+          "level": 2,
+          "title": "工作经历",
+          "color": "#667eea",
+          "logo": "http://119.145.17.34:8000/uploads/20260415_135359_52059763.png"
+        }
+      ],
+      "share_title": "谢达 - 深圳市龙岗区坂田街道办事处",
+      "share_desc": "党工委副书记、办事处主任",
+      "share_icon": "https://img.cdn1.vip/i/69a0748ac1626_1772123274.png"
+    }
+  ]
+}

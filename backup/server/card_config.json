@@ -1,0 +1,133 @@
+{
+  "basicInfo": {
+    "name": "Leon",
+    "title": "深圳市龙岗区坂田街道办事处",
+    "title2": "AS",
+    "phone": "18922878666",
+    "email": "szxieda@163.com",
+    "logo": "http://localhost:5000/uploads/1.png",
+    "company": "深圳市龙岗区坂田街道办事处",
+    "address": ""
+  },
+  "settings": {
+    "showCallConfirm": true,
+    "defaultPage": "文旅测试"
+  },
+  "pages": [
+    {
+      "id": "首页",
+      "title": "首页",
+      "sections": [
+        {
+          "type": "contact",
+          "bgTheme": "theme-purple-pink",
+          "contentTheme": "theme-purple-pink",
+          "name": "黎俊F",
+          "title": "深圳市大鹏新区投资控股有限公司",
+          "title2": "董事长",
+          "phone": "1305XXX1849",
+          "email": "leonzion@xxx.com",
+          "logo": "http://119.145.17.34:8000/uploads/20260415_135359_52059763.png",
+          "company": "深圳市大鹏新区投资控股有限公司",
+          "address": "深圳市大鹏新区葵涌街道坝光社区海潮路18号绿岛国际壹中心E栋1301"
+        },
+        {
+          "type": "image",
+          "src": "http://119.145.17.34:8000/uploads/20260415_135359_52059763.png",
+          "jump": "http://119.145.17.34:8000/index-dynamic.html?page=文旅测试"
+        }
+      ],
+      "share_title": "大鹏投控",
+      "share_desc": "- 一些转发时的测试描述文本 | 随便写写 | 之后让由各部司文员写写就差不多了",
+      "share_icon": "http://119.145.17.34:8000/uploads/20260415_135359_52059763.png"
+    },
+    {
+      "id": "文旅测试",
+      "title": "文旅-名片-测试",
+      "sections": [
+        {
+          "type": "contact",
+          "bgTheme": "theme-purple-pink",
+          "contentTheme": "theme-purple-pink",
+          "name": "Test",
+          "title": "Test",
+          "title2": "Test",
+          "phone": "123",
+          "email": "t@t.com",
+          "logo": "http://119.145.17.34:8000/uploads/20260415_135359_52059763.png",
+          "company": "Test",
+          "address": "Test"
+        },
+        {
+          "type": "carousel",
+          "items": [
+            {
+              "src": "http://119.145.17.34:8000/uploads/20260415_135359_52059763.png",
+              "jump": "http://jump1.com",
+              "title": "aaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            {
+              "src": "http://119.145.17.34:8000/uploads/20260418_151536_6e630726.png",
+              "jump": "http://jump2.com",
+              "title": "aaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            {
+              "src": "http://119.145.17.34:8000/uploads/20260418_151429_6cc8f23e.png",
+              "jump": "",
+              "title": "aaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          ],
+          "autoplay": true,
+          "interval": 4000
+        },
+        {
+          "type": "tabs",
+          "tabs": [
+            {
+              "title": "Tab1",
+              "sections": [
+                {
+                  "type": "title",
+                  "level": 1,
+                  "title": "Hello1",
+                  "color": "",
+                  "logo": ""
+                }
+              ]
+            },
+            {
+              "title": "Tab2",
+              "sections": [
+                {
+                  "type": "title",
+                  "level": 2,
+                  "title": "Hello2",
+                  "color": "",
+                  "logo": ""
+                }
+              ]
+            },
+            {
+              "title": "fas",
+              "sections": [
+                {
+                  "type": "title",
+                  "level": 1,
+                  "title": "ggg",
+                  "color": "",
+                  "logo": ""
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "share_title": "Test",
+      "share_desc": "Test",
+      "share_icon": "http://119.145.17.34:8000/uploads/20260415_135359_52059763.png",
+      "divider_height": 1,
+      "divider_spacing": 20,
+      "divider_color": "#e0e0e0"
+    }
+  ]
+}

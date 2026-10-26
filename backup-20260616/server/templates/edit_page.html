@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑页面</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            background: linear-gradient(90deg, #3c8ce7 0%, #15c0eb 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .header .back {
+            float: right;
+            color: white;
+            text-decoration: none;
+            margin-top: 5px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        h2 {
+            color: #1E63B3;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #3c8ce7 0%, #15c0eb 100%);
+            color: white;
+        }
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        .flash {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #dc3545;
+        }
+        .hint {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>编辑页面</h1>
+        <a href="{{ url_for('pages') }}" class="back">返回页面列表</a>
+    </div>
+    
+    <div class="container">
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="card">
+            <form method="post">
+                <div class="form-group">
+                    <label for="page_id">页面ID</label>
+                    <input type="text" id="page_id" name="page_id" value="{{ page.id }}" required>
+                    <div class="hint">用于URL引用，尽量简洁</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="page_title">页面标题</label>
+                    <input type="text" id="page_title" name="page_title" value="{{ page.title }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="group_id">所属分组</label>
+                    <select id="group_id" name="group_id" required>
+                        {% for group in groups %}
+                            <option value="{{ group.id }}" {% if page.groupId == group.id %}selected{% endif %}>{{ group.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="share_title">分享标题</label>
+                    <input type="text" id="share_title" name="share_title" value="{{ page.share_title or '' }}" placeholder="微信分享时显示的标题">
+                </div>
+                
+                <div class="form-group">
+                    <label for="share_desc">分享描述</label>
+                    <input type="text" id="share_desc" name="share_desc" value="{{ page.share_desc or '' }}" placeholder="微信分享时显示的描述">
+                </div>
+                
+                <div class="form-group">
+                    <label for="share_icon">分享图标URL</label>
+                    <input type="text" id="share_icon" name="share_icon" value="{{ page.share_icon or '' }}" placeholder="微信分享时显示的图标">
+                </div>
+                
+                <div class="form-group">
+                    <label for="mobile_gap">手机端容器间隙（像素）</label>
+                    <input type="number" id="mobile_gap" name="mobile_gap" value="{{ page.mobile_gap or 10 }}" min="0" max="50">
+                </div>
+                
+                <h3 style="margin: 30px 0 15px; color: #3c8ce7; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px;">名片个人信息模块背景设置</h3>
+                
+                <div class="form-group">
+                    <label for="card_bg_theme">背景主题</label>
+                    <select id="card_bg_theme" name="card_bg_theme">
+                        <option value="">不设置（使用默认白色）</option>
+                        <option value="theme-purple-pink" {% if page.card_bg_theme == 'theme-purple-pink' %}selected{% endif %}>紫粉渐变</option>
+                        <option value="theme-blue-green" {% if page.card_bg_theme == 'theme-blue-green' %}selected{% endif %}>蓝绿渐变</option>
+                        <option value="theme-orange-red" {% if page.card_bg_theme == 'theme-orange-red' %}selected{% endif %}>橙红渐变</option>
+                        <option value="theme-cyan-blue" {% if page.card_bg_theme == 'theme-cyan-blue' %}selected{% endif %}>青蓝渐变</option>
+                        <option value="theme-gold" {% if page.card_bg_theme == 'theme-gold' %}selected{% endif %}>暖金渐变</option>
+                        <option value="theme-deep-purple" {% if page.card_bg_theme == 'theme-deep-purple' %}selected{% endif %}>深紫渐变</option>
+                        <option value="theme-white" {% if page.card_bg_theme == 'theme-white' %}selected{% endif %}>浅灰渐变</option>
+                        <option value="theme-dark" {% if page.card_bg_theme == 'theme-dark' %}selected{% endif %}>深灰渐变</option>
+                    </select>
+                    <div class="hint">设置名片个人信息模块容器的背景主题</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="card_custom_bg_image">自定义背景图片URL</label>
+                    <input type="text" id="card_custom_bg_image" name="card_custom_bg_image" value="{{ page.card_custom_bg_image or '' }}" placeholder="可选，输入图片链接">
+                    <div class="hint">如果填写，将覆盖上面的主题背景，仅应用于名片个人信息模块</div>
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit" class="btn-primary">保存修改</button>
+                    <a href="{{ url_for('pages') }}" style="text-decoration: none;"><button type="button" class="btn-secondary">取消</button></a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

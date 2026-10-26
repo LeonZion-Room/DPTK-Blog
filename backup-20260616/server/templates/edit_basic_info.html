@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>名片信息设置</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-attachment: fixed;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            color: white;
+            padding: 25px 30px;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .header .back {
+            color: white;
+            text-decoration: none;
+            padding: 10px 24px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .header .back:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            padding: 40px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+        h2 {
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 26px;
+            font-weight: 700;
+            position: relative;
+            display: inline-block;
+        }
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="url"],
+        .form-group input[type="number"],
+        .form-group input[type="color"] {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: #f8fafc;
+        }
+        .form-group input[type="text"]:focus,
+        .form-group input[type="url"]:focus,
+        .form-group input[type="number"]:focus,
+        .form-group input[type="color"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+        .form-group select {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 15px;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+        .form-group small {
+            display: block;
+            margin-top: 6px;
+            color: #718096;
+            font-size: 13px;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.5);
+        }
+        .flash {
+            background: rgba(76, 175, 80, 0.15);
+            color: #2e7d32;
+            padding: 20px 25px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            border-left: 5px solid #4caf50;
+            backdrop-filter: blur(10px);
+            font-weight: 500;
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        .preview-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-top: 30px;
+        }
+        .preview-title {
+            color: #667eea;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .contact-preview {
+            border-radius: 16px;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .contact-preview .logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            object-fit: cover;
+            margin-bottom: 15px;
+        }
+        .contact-preview .name {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .contact-preview .title {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+        .contact-preview .title2 {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+        .contact-preview .company {
+            font-size: 14px;
+            opacity: 0.85;
+            margin-bottom: 4px;
+        }
+        .contact-preview .info-row {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .contact-preview .info-row svg {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+            opacity: 0.8;
+        }
+        .theme-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 10px;
+        }
+        .theme-option {
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .theme-option:hover {
+            transform: translateY(-2px);
+        }
+        .theme-option.selected {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+        }
+        .theme-purple-pink {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .theme-blue-green {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        .theme-orange-red {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        .theme-cyan-blue {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        .theme-gold {
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            color: white;
+        }
+        .theme-deep-purple {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+            color: white;
+        }
+        .theme-white {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+        }
+        .theme-dark {
+            background: linear-gradient(135deg, #232526 0%, #414345 100%);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>名片信息设置</h1>
+        <a href="{{ url_for('admin') }}" class="back">返回管理首页</a>
+    </div>
+    
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="card">
+            <h2>名片基本信息</h2>
+            
+            <form method="post" action="{{ url_for('edit_basic_info') }}">
+                <div class="form-group">
+                    <label for="name">姓名</label>
+                    <input type="text" id="name" name="name" value="{{ basicInfo.name or '' }}" placeholder="请输入姓名">
+                </div>
+                
+                <div class="form-group">
+                    <label for="title">职位/单位（第一行）</label>
+                    <input type="text" id="title" name="title" value="{{ basicInfo.title or '' }}" placeholder="如：深圳市XXX公司">
+                </div>
+                
+                <div class="form-group">
+                    <label for="title2">职位（第二行）</label>
+                    <input type="text" id="title2" name="title2" value="{{ basicInfo.title2 or '' }}" placeholder="如：总经理">
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">联系电话</label>
+                    <input type="text" id="phone" name="phone" value="{{ basicInfo.phone or '' }}" placeholder="请输入联系电话">
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">邮箱</label>
+                    <input type="text" id="email" name="email" value="{{ basicInfo.email or '' }}" placeholder="请输入邮箱地址">
+                </div>
+                
+                <div class="form-group">
+                    <label for="company">公司/单位名称</label>
+                    <input type="text" id="company" name="company" value="{{ basicInfo.company or '' }}" placeholder="请输入公司或单位名称">
+                </div>
+                
+                <div class="form-group">
+                    <label for="address">地址</label>
+                    <input type="text" id="address" name="address" value="{{ basicInfo.address or '' }}" placeholder="请输入详细地址">
+                </div>
+                
+                <div class="form-group">
+                    <label for="logo">Logo图片URL</label>
+                    <input type="text" id="logo" name="logo" value="{{ basicInfo.logo or '' }}" placeholder="请输入Logo图片链接">
+                    <small>可上传资源后复制URL</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="alignment">文本对齐方式</label>
+                    <select id="alignment" name="alignment">
+                        <option value="center" {% if basicInfo.alignment == 'center' or not basicInfo.alignment %}selected{% endif %}>居中</option>
+                        <option value="left" {% if basicInfo.alignment == 'left' %}selected{% endif %}>居左</option>
+                        <option value="right" {% if basicInfo.alignment == 'right' %}selected{% endif %}>居右</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="logoSize">Logo大小（像素）</label>
+                    <input type="number" id="logoSize" name="logoSize" value="{{ basicInfo.logoSize or 150 }}" min="10" max="300">
+                </div>
+                
+                <div class="form-group">
+                    <label for="borderRadius">圆角角度（像素）</label>
+                    <input type="number" id="borderRadius" name="borderRadius" value="{{ basicInfo.borderRadius if basicInfo.borderRadius is not none else 12 }}" min="0" max="50">
+                </div>
+                
+                <h2 style="margin-top: 40px;">名片个人信息模块背景设置</h2>
+                
+                <div class="form-group">
+                    <label>背景主题</label>
+                    <div class="theme-options">
+                        <div class="theme-option theme-purple-pink {% if basicInfo.bgTheme == 'theme-purple-pink' or not basicInfo.bgTheme %}selected{% endif %}" data-theme="theme-purple-pink" onclick="selectTheme(this)">紫粉渐变</div>
+                        <div class="theme-option theme-blue-green {% if basicInfo.bgTheme == 'theme-blue-green' %}selected{% endif %}" data-theme="theme-blue-green" onclick="selectTheme(this)">蓝绿渐变</div>
+                        <div class="theme-option theme-orange-red {% if basicInfo.bgTheme == 'theme-orange-red' %}selected{% endif %}" data-theme="theme-orange-red" onclick="selectTheme(this)">橙红渐变</div>
+                        <div class="theme-option theme-cyan-blue {% if basicInfo.bgTheme == 'theme-cyan-blue' %}selected{% endif %}" data-theme="theme-cyan-blue" onclick="selectTheme(this)">青蓝渐变</div>
+                        <div class="theme-option theme-gold {% if basicInfo.bgTheme == 'theme-gold' %}selected{% endif %}" data-theme="theme-gold" onclick="selectTheme(this)">暖金渐变</div>
+                        <div class="theme-option theme-deep-purple {% if basicInfo.bgTheme == 'theme-deep-purple' %}selected{% endif %}" data-theme="theme-deep-purple" onclick="selectTheme(this)">深紫渐变</div>
+                        <div class="theme-option theme-white {% if basicInfo.bgTheme == 'theme-white' %}selected{% endif %}" data-theme="theme-white" onclick="selectTheme(this)">浅灰渐变</div>
+                        <div class="theme-option theme-dark {% if basicInfo.bgTheme == 'theme-dark' %}selected{% endif %}" data-theme="theme-dark" onclick="selectTheme(this)">深灰渐变</div>
+                    </div>
+                    <input type="hidden" id="bgTheme" name="bgTheme" value="{{ basicInfo.bgTheme or 'theme-purple-pink' }}">
+                    <small style="display: block; margin-top: 10px; color: #718096; font-size: 13px;">此设置仅影响名片个人信息模块容器的背景，不影响页面其他部分</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="useCustomBg" name="useCustomBg" {% if basicInfo.useCustomBg %}checked{% endif %}>
+                        使用自定义背景图片（勾选后将覆盖主题背景，仅应用于名片个人信息模块）
+                    </label>
+                </div>
+                
+                <div class="form-group" id="customBgGroup" style="{% if not basicInfo.useCustomBg %}display: none;{% endif %}">
+                    <label for="customBgImage">自定义背景图片URL</label>
+                    <input type="text" id="customBgImage" name="customBgImage" value="{{ basicInfo.customBgImage or '' }}" placeholder="请输入背景图片链接">
+                    <small>可使用上传的资源图片URL，背景图片将应用于名片个人信息模块容器</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="noBorder" name="noBorder" {% if basicInfo.noBorder %}checked{% endif %}>
+                        无边框样式
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn-primary">保存名片信息</button>
+            </form>
+            
+            <div class="preview-card">
+                <div class="preview-title">名片预览</div>
+                <div id="contactPreview" class="contact-preview theme-purple-pink">
+                    <div id="previewLogo" style="display: {% if basicInfo.logo %}block{% else %}none{% endif %};">
+                        <img src="{{ basicInfo.logo or '' }}" alt="Logo" class="logo" onerror="this.parentElement.style.display='none'">
+                    </div>
+                    <div id="previewName" class="name">{{ basicInfo.name or '姓名' }}</div>
+                    <div id="previewTitle" class="title">{{ basicInfo.title or '职位/单位' }}</div>
+                    <div id="previewTitle2" class="title2">{{ basicInfo.title2 or '职位' }}</div>
+                    <div id="previewCompany" class="company">{{ basicInfo.company or '公司名称' }}</div>
+                    <div id="previewPhone" class="info-row">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                        </svg>
+                        {{ basicInfo.phone or '联系电话' }}
+                    </div>
+                    <div id="previewEmail" class="info-row" style="{% if not basicInfo.email %}display: none;{% endif %}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                        {{ basicInfo.email or '' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 选择主题
+        function selectTheme(element) {
+            document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            document.getElementById('bgTheme').value = element.dataset.theme;
+            updatePreview();
+        }
+        
+        // 更新预览
+        function updatePreview() {
+            const preview = document.getElementById('contactPreview');
+            const bgTheme = document.getElementById('bgTheme').value;
+            
+            // 移除所有主题类
+            preview.className = 'contact-preview';
+            // 添加当前主题
+            preview.classList.add(bgTheme);
+            
+            // 更新预览内容
+            document.getElementById('previewName').textContent = document.getElementById('name').value || '姓名';
+            document.getElementById('previewTitle').textContent = document.getElementById('title').value || '职位/单位';
+            document.getElementById('previewTitle2').textContent = document.getElementById('title2').value || '职位';
+            document.getElementById('previewCompany').textContent = document.getElementById('company').value || '公司名称';
+            document.getElementById('previewPhone').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg> ' + (document.getElementById('phone').value || '联系电话');
+            
+            const emailRow = document.getElementById('previewEmail');
+            if (document.getElementById('email').value) {
+                emailRow.style.display = 'flex';
+                emailRow.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg> ' + document.getElementById('email').value;
+            } else {
+                emailRow.style.display = 'none';
+            }
+            
+            // 更新Logo
+            const logoUrl = document.getElementById('logo').value;
+            const logoDiv = document.getElementById('previewLogo');
+            if (logoUrl) {
+                logoDiv.style.display = 'block';
+                logoDiv.querySelector('img').src = logoUrl;
+            } else {
+                logoDiv.style.display = 'none';
+            }
+        }
+        
+        // 自定义背景切换
+        document.getElementById('useCustomBg').addEventListener('change', function() {
+            document.getElementById('customBgGroup').style.display = this.checked ? 'block' : 'none';
+        });
+        
+        // 实时预览更新
+        document.querySelectorAll('input[type="text"], input[type="number"]').forEach(input => {
+            input.addEventListener('input', updatePreview);
+        });
+        
+        // 初始化
+        updatePreview();
+    </script>
+</body>
+</html>

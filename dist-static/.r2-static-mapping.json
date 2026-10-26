@@ -1,0 +1,11 @@
+{
+  "js/vcard.js": "https://pub-2c4d70b54401408980230857bdbfcec3.r2.dev/static/js/vcard.js",
+  "js/config.js": "https://pub-2c4d70b54401408980230857bdbfcec3.r2.dev/static/js/config.js",
+  "css/style.css": "https://pub-2c4d70b54401408980230857bdbfcec3.r2.dev/static/css/style.css",
+  "js/main-dynamic.js": "https://pub-2c4d70b54401408980230857bdbfcec3.r2.dev/static/js/main-dynamic.js",
+  "js/wechat-jssdk.js": "https://pub-2c4d70b54401408980230857bdbfcec3.r2.dev/static/js/wechat-jssdk.js",
+  "favicon-192.png": "https://pub-2c4d70b54401408980230857bdbfcec3.r2.dev/static/favicon-192.png",
+  "favicon-512.png": "https://pub-2c4d70b54401408980230857bdbfcec3.r2.dev/static/favicon-512.png",
+  "manifest.json": "https://pub-2c4d70b54401408980230857bdbfcec3.r2.dev/static/manifest.json",
+  "nav.html": "https://pub-2c4d70b54401408980230857bdbfcec3.r2.dev/static/nav.html"
+}

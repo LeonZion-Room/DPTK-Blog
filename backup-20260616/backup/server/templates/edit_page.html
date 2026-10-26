@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑页面</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            background: linear-gradient(90deg, #3c8ce7 0%, #15c0eb 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .header .back {
+            float: right;
+            color: white;
+            text-decoration: none;
+            margin-top: 5px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        h2 {
+            color: #1E63B3;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .info p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #3c8ce7 0%, #15c0eb 100%);
+            color: white;
+        }
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        .flash {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>编辑页面</h1>
+        <a href="{{ url_for('pages') }}" class="back">返回页面列表</a>
+    </div>
+    
+    <div class="container">
+        
+        <div class="card">
+            <div class="info">
+                <p><strong>页面ID:</strong> {{ page.id }}</p>
+                <p><strong>区块数量:</strong> {{ page.sections|length }}</p>
+            </div>
+            
+            <form method="post">
+                <div class="form-group">
+                    <label for="page_title">页面标题</label>
+                    <input type="text" id="page_title" name="page_title" value="{{ page.title }}" required>
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit" class="btn-primary">保存修改</button>
+                    <a href="{{ url_for('pages') }}"><button type="button" class="btn-secondary">取消</button></a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

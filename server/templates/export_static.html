@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一键导出静态站 - 微信名片管理</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-attachment: fixed; min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
+            color: white; padding: 25px 30px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .header h1 { font-size: 24px; }
+        .header a { color: white; text-decoration: none; padding: 10px 24px;
+            background: rgba(255,255,255,0.2); border-radius: 25px; margin-left: 10px; }
+        .container { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        .card { background: rgba(255,255,255,0.95); border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15); padding: 40px; margin-bottom: 30px; }
+        .flash { background: rgba(76,175,80,0.15); color: #2e7d32; padding: 20px 25px;
+            border-radius: 16px; margin-bottom: 25px; border-left: 5px solid #4caf50; font-weight: 500; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        td { padding: 10px 12px; border-bottom: 1px solid #eee; color: #333; }
+        td:first-child { color: #7f8c8d; width: 160px; }
+        .btn { display: inline-block; padding: 14px 40px; font-size: 18px; font-weight: 700;
+            color: white; background: linear-gradient(90deg, #667eea, #764ba2);
+            border: none; border-radius: 12px; cursor: pointer; }
+        .btn:active { transform: scale(0.98); }
+        .hint { color: #7f8c8d; font-size: 14px; line-height: 1.8; margin-top: 20px; }
+        code { background: #f4f4f8; padding: 2px 8px; border-radius: 6px; font-size: 13px; }
+        .err { color: #c62828; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌐 一键导出静态站</h1>
+        <div>
+            <a href="{{ url_for('admin') }}">← 返回控制台</a>
+        </div>
+    </div>
+    <div class="container">
+        <div class="card">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="flash">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <table>
+                <tr><td>名片页总数</td><td>{{ total_pages }} 页</td></tr>
+                <tr><td>输出目录</td><td><code>{{ out_rel }}/</code>（项目根下）</td></tr>
+                <tr><td>上次导出</td><td>{{ info.time if info.time else '尚未导出' }}</td></tr>
+                {% if info.time %}
+                <tr><td>上次页数</td><td>{{ info.pages }} 页（约 {{ (info.bytes / 1024 / 1024) | round(1) }} MB）</td></tr>
+                {% endif %}
+                {% if info.errors %}
+                <tr><td>上次告警</td><td class="err">{{ info.errors | join('<br>') | safe }}</td></tr>
+                {% endif %}
+            </table>
+            <form method="post" action="{{ url_for('export_static_run') }}"
+                  onsubmit="var b=document.getElementById('expBtn');b.disabled=true;b.textContent='导出中，请稍候…';">
+                <button id="expBtn" class="btn" type="submit">🚀 开始导出静态站</button>
+            </form>
+            <div class="hint">
+                导出内容：<code>index.html</code> + <code>p/&lt;页面ID&gt;/index.html</code>（每页内嵌配置、离线可渲染）
+                + <code>css/js</code> 资源。图片/视频/PDF 保持热链原站。<br>
+                导出后把 <code>{{ out_rel }}/</code> 推到 GitHub，Cloudflare Pages 指向该目录即上线。
+                上线后把页面里的原站域名替换为新域名即可。
+            </div>
+        </div>
+    </div>
+</body>
+</html>

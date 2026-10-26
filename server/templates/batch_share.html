@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>批量修改页面分享设置</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            background: linear-gradient(90deg, #3c8ce7 0%, #15c0eb 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header h1 { margin: 0; font-size: 24px; }
+        .header .back {
+            float: right;
+            color: white;
+            text-decoration: none;
+            margin-top: 5px;
+        }
+        .container { max-width: 1200px; margin: 20px auto; padding: 20px; }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #1E63B3;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        .group-label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1E63B3;
+            margin: 22px 0 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #eef0f4;
+        }
+        .quick-fill {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 14px;
+            margin-bottom: 8px;
+        }
+        .quick-fill .qf-item {
+            background: #f8fafd;
+            border: 1px solid #e8ecf1;
+            border-radius: 10px;
+            padding: 14px 16px;
+        }
+        .qf-item .qf-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a2a4a;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .qf-item .qf-row {
+            display: flex;
+            gap: 8px;
+        }
+        .qf-item input[type="text"] {
+            flex: 1;
+            padding: 9px 12px;
+            border: 1px solid #d8dde6;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+        .qf-item input[type="text"]:focus {
+            outline: none;
+            border-color: #3c8ce7;
+            box-shadow: 0 0 0 3px rgba(60,140,231,0.12);
+        }
+        .btn-outline {
+            background: #fff;
+            color: #3c8ce7;
+            border: 1px solid #3c8ce7;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn-outline:hover { background: #eef4fc; }
+        .btn-primary {
+            background: linear-gradient(90deg, #3c8ce7 0%, #15c0eb 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 24px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 24px;
+            font-size: 15px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .page-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .search-box {
+            padding: 9px 14px;
+            border: 1px solid #d8dde6;
+            border-radius: 8px;
+            font-size: 13px;
+            width: 260px;
+        }
+        .table-wrap {
+            border: 1px solid #eef0f4;
+            border-radius: 10px;
+            overflow: auto;
+            max-height: 560px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        thead th {
+            background: #f5f8fc;
+            color: #1a2a4a;
+            font-weight: 700;
+            padding: 12px 10px;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            text-align: left;
+            border-bottom: 2px solid #e3e9f1;
+            white-space: nowrap;
+        }
+        tbody td {
+            padding: 10px;
+            border-bottom: 1px solid #eef0f4;
+            vertical-align: middle;
+        }
+        tbody tr:hover { background: #f7fafd; }
+        tbody tr.selected { background: #eaf3ff; }
+        .row-check { width: 34px; }
+        .row-page { min-width: 150px; }
+        .row-page .page-name { font-weight: 600; color: #1a2a4a; }
+        .row-page .page-id { font-size: 11px; color: #8a94a6; }
+        .row-share { min-width: 220px; }
+        .row-share input[type="text"] {
+            width: 100%;
+            padding: 7px 10px;
+            border: 1px solid #d8dde6;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+        .row-share input[type="text"]:focus {
+            outline: none;
+            border-color: #3c8ce7;
+            box-shadow: 0 0 0 3px rgba(60,140,231,0.12);
+        }
+        .row-share input.dirty {
+            border-color: #ffc107;
+            background: #fffbe8;
+        }
+        .row-icon { min-width: 180px; }
+        .icon-preview {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .icon-preview img {
+            width: 34px;
+            height: 34px;
+            border-radius: 6px;
+            object-fit: cover;
+            border: 1px solid #e0e4ea;
+            background: #f0f4f8;
+            flex-shrink: 0;
+        }
+        .cell-icon-wrap { display: flex; gap: 8px; align-items: center; }
+        .cell-icon-wrap input[type="text"] { flex: 1; }
+        .row-status { white-space: nowrap; }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            background: #eef0f4;
+            color: #6b7280;
+        }
+        .badge.changed {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .summary-bar {
+            margin-top: 20px;
+            padding: 14px 18px;
+            background: #fffbe8;
+            border: 1px solid #ffe58f;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #7a6a00;
+            line-height: 1.8;
+        }
+        .summary-bar b { color: #1a2a4a; }
+        #save-message { margin-top: 16px; display: none; }
+        .empty-state { text-align: center; padding: 40px 20px; color: #666; }
+        .check-all-row { margin-bottom: 10px; font-size: 13px; color: #4b5563; display: flex; align-items: center; gap: 6px; }
+        .check-all-row input { width: 16px; height: 16px; }
+        .flash { background: #f8d7da; color: #721c24; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>批量修改页面分享设置</h1>
+        <a href="{{ url_for('admin') }}" class="back">返回首页</a>
+    </div>
+
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="card">
+            <h2>页面分享设置（分享出去的卡片样子）</h2>
+            <p style="color:#8a94a6; font-size:13px; margin-bottom:16px;">
+                微信分享卡片显示的内容由「分享标题」「分享描述」「分享图标」决定。
+                你可以直接在下表逐行修改，或使用「统一填充」把同一个值一键应用到所有勾选的页面，最后点击「批量保存」。
+            </p>
+
+            <div class="group-label">① 统一填充（应用到所有勾选的页面）</div>
+            <div class="quick-fill">
+                <div class="qf-item">
+                    <div class="qf-label">分享标题</div>
+                    <div class="qf-row">
+                        <input type="text" id="qfTitle" placeholder="输入要统一设置的标题">
+                        <button type="button" class="btn-outline" onclick="quickFill('title')">应用到勾选页面</button>
+                    </div>
+                </div>
+                <div class="qf-item">
+                    <div class="qf-label">分享描述</div>
+                    <div class="qf-row">
+                        <input type="text" id="qfDesc" placeholder="输入要统一设置的描述">
+                        <button type="button" class="btn-outline" onclick="quickFill('desc')">应用到勾选页面</button>
+                    </div>
+                </div>
+                <div class="qf-item">
+                    <div class="qf-label">分享图标 URL</div>
+                    <div class="qf-row">
+                        <input type="text" id="qfIcon" placeholder="输入要统一设置的图标URL">
+                        <button type="button" class="btn-outline" onclick="quickFill('icon')">应用到勾选页面</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="group-label">② 选择页面并逐行修改</div>
+            <div class="page-toolbar">
+                <input type="text" class="search-box" id="pageSearch" placeholder="搜索页面ID或标题…" oninput="filterPages(this.value)">
+                <div>
+                    <button type="button" class="btn-outline" onclick="selectAllPages()">全选</button>
+                    <button type="button" class="btn-outline" onclick="clearAllPages()">清空</button>
+                </div>
+            </div>
+
+            {% if pages %}
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="row-check"><input type="checkbox" id="checkAll" onchange="toggleCheckAll(this)"></th>
+                            <th class="row-page">页面</th>
+                            <th class="row-share">分享标题</th>
+                            <th class="row-share">分享描述</th>
+                            <th class="row-icon">分享图标 URL</th>
+                            <th class="row-status">状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for page in pages %}
+                        <tr id="row-{{ page.id }}" data-page-id="{{ page.id }}" data-search="{{ page.id }} {{ page.title }}">
+                            <td class="row-check">
+                                <input type="checkbox" value="{{ page.id }}" class="row-cb" onchange="onRowCheck(this)">
+                            </td>
+                            <td class="row-page">
+                                <div class="page-name">{{ page.title }}</div>
+                                <div class="page-id">{{ page.id }}</div>
+                            </td>
+                            <td class="row-share">
+                                <input type="text" class="row-input" data-field="share_title" value="{{ page.share_title or '' }}" oninput="markDirty(this)" placeholder="分享标题">
+                            </td>
+                            <td class="row-share">
+                                <input type="text" class="row-input" data-field="share_desc" value="{{ page.share_desc or '' }}" oninput="markDirty(this)" placeholder="分享描述">
+                            </td>
+                            <td class="row-icon">
+                                <div class="cell-icon-wrap">
+                                    <input type="text" class="row-input" data-field="share_icon" value="{{ page.share_icon or '' }}" oninput="markDirty(this); updateIconPreview(this)" placeholder="图标URL">
+                                    <img class="icon-preview" src="{{ page.share_icon or '' }}" alt="" onerror="this.style.display='none'" onload="this.style.display=''">
+                                </div>
+                            </td>
+                            <td class="row-status"><span class="badge"></span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state"><h3>暂无页面</h3><p>请先到「页面管理」创建页面</p></div>
+            {% endif %}
+
+            <div class="summary-bar" id="summaryBar" style="display:none;"></div>
+
+            <div style="margin-top: 20px; text-align: right;">
+                <button type="button" class="btn-primary" id="save-btn" onclick="submitBatch()">批量保存</button>
+                <a href="{{ url_for('admin') }}"><button type="button" class="btn-secondary">取消</button></a>
+            </div>
+            <div id="save-message"></div>
+        </div>
+    </div>
+
+    <script>
+        // 页面过滤
+        function filterPages(keyword) {
+            const kw = keyword.trim().toLowerCase();
+            document.querySelectorAll('tbody tr[data-page-id]').forEach(row => {
+                const hay = (row.dataset.search || '').toLowerCase();
+                row.style.display = (!kw || hay.includes(kw)) ? '' : 'none';
+            });
+        }
+
+        // 全选
+        function toggleCheckAll(cb) {
+            document.querySelectorAll('.row-cb').forEach(c => {
+                c.checked = cb.checked;
+                c.closest('tr').classList.toggle('selected', cb.checked);
+            });
+            updateSummary();
+        }
+
+        function onRowCheck(cb) {
+            cb.closest('tr').classList.toggle('selected', cb.checked);
+            const all = document.querySelectorAll('.row-cb');
+            const checked = document.querySelectorAll('.row-cb:checked');
+            const checkAll = document.getElementById('checkAll');
+            checkAll.checked = all.length > 0 && all.length === checked.length;
+            updateSummary();
+        }
+
+        function selectAllPages() {
+            document.querySelectorAll('.row-cb').forEach(c => {
+                c.checked = true;
+                c.closest('tr').classList.add('selected');
+            });
+            const checkAll = document.getElementById('checkAll');
+            if (checkAll) checkAll.checked = true;
+            updateSummary();
+        }
+
+        function clearAllPages() {
+            document.querySelectorAll('.row-cb').forEach(c => {
+                c.checked = false;
+                c.closest('tr').classList.remove('selected');
+            });
+            const checkAll = document.getElementById('checkAll');
+            if (checkAll) checkAll.checked = false;
+            updateSummary();
+        }
+
+        function getSelectedPages() {
+            return Array.from(document.querySelectorAll('.row-cb:checked')).map(cb => cb.value);
+        }
+
+        // 标记修改
+        function markDirty(input) {
+            const row = input.closest('tr');
+            const badge = row.querySelector('.badge');
+            const inputs = row.querySelectorAll('.row-input');
+            const isDirty = Array.from(inputs).some(i => i.value !== i.dataset.orig);
+            if (isDirty) {
+                badge.textContent = '已修改';
+                badge.classList.add('changed');
+                inputs.forEach(i => i.classList.add('dirty'));
+            } else {
+                badge.textContent = '';
+                badge.classList.remove('changed');
+                inputs.forEach(i => i.classList.remove('dirty'));
+            }
+            updateSummary();
+        }
+
+        // 记录原始值（用于脏检查）
+        document.querySelectorAll('.row-input').forEach(input => {
+            input.dataset.orig = input.value;
+        });
+
+        // 图标预览
+        function updateIconPreview(input) {
+            const img = input.parentElement.querySelector('img');
+            if (!img) return;
+            const url = input.value.trim();
+            if (!url) { img.style.display = 'none'; img.src = ''; return; }
+            img.src = url;
+        }
+
+        // 统一填充
+        function quickFill(field) {
+            const ids = { title: 'qfTitle', desc: 'qfDesc', icon: 'qfIcon' };
+            const value = document.getElementById(ids[field]).value;
+            const pages = getSelectedPages();
+            if (pages.length === 0) { alert('请先勾选要应用的页面'); return; }
+            pages.forEach(pid => {
+                const row = document.getElementById('row-' + pid);
+                if (!row || row.style.display === 'none') return;
+                const input = row.querySelector('.row-input[data-field="share_' + field + '"]');
+                if (input) {
+                    input.value = value;
+                    if (field === 'icon') updateIconPreview(input);
+                    markDirty(input);
+                }
+            });
+            showToast('已应用到 ' + pages.length + ' 个页面');
+        }
+
+        // 汇总
+        function updateSummary() {
+            const bar = document.getElementById('summaryBar');
+            const pages = getSelectedPages();
+            const dirtyCount = document.querySelectorAll('.row-input.dirty').length;
+            const total = document.querySelectorAll('.row-cb').length;
+            if (pages.length === 0 && dirtyCount === 0) {
+                bar.style.display = 'none';
+                return;
+            }
+            bar.style.display = 'block';
+            let html = '已勾选 <b>' + pages.length + '</b> / ' + total + ' 个页面';
+            if (dirtyCount) html += '，当前有 <b>' + dirtyCount + '</b> 处修改待保存';
+            html += '（点击「批量保存」生效）';
+            bar.innerHTML = html;
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;top:20px;right:20px;background:' + (isError ? '#dc3545' : '#28a745') + ';color:white;padding:10px 20px;border-radius:4px;font-size:14px;z-index:1000;opacity:0;transition:opacity .3s;';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.style.opacity = '1', 10);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => document.body.removeChild(toast), 300);
+            }, 2000);
+        }
+
+        // 提交
+        function submitBatch() {
+            const dirtyInputs = document.querySelectorAll('.row-input.dirty');
+            if (dirtyInputs.length === 0) { alert('没有需要保存的修改'); return; }
+
+            const saveBtn = document.getElementById('save-btn');
+            const msg = document.getElementById('save-message');
+            saveBtn.disabled = true;
+            saveBtn.textContent = '保存中…';
+            msg.style.display = 'block';
+            msg.style.background = '#fff3cd';
+            msg.style.color = '#856404';
+            msg.textContent = '正在保存…';
+
+            const byPage = {};
+            dirtyInputs.forEach(input => {
+                const pid = input.closest('tr').dataset.pageId;
+                const field = input.dataset.field;
+                if (!byPage[pid]) byPage[pid] = { pageId: pid };
+                byPage[pid][field] = input.value;
+            });
+
+            fetch('/api/pages/batch-share', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pages: Object.values(byPage) })
+            })
+            .then(r => r.json())
+            .then(data => {
+                saveBtn.disabled = false;
+                saveBtn.textContent = '批量保存';
+                if (data.success) {
+                    const fails = data.results.filter(r => !r.success);
+                    msg.style.background = '#d4edda';
+                    msg.style.color = '#155724';
+                    msg.textContent = fails.length === 0
+                        ? '✓ 已保存 ' + data.results.length + ' 个页面的分享设置'
+                        : '✓ 已保存，其中 ' + fails.length + ' 个页面失败（' + fails.map(f => f.pageId + ':' + (f.error || '')).join('; ') + '）';
+                    // 重置脏状态
+                    document.querySelectorAll('.row-input').forEach(i => {
+                        i.dataset.orig = i.value;
+                        i.classList.remove('dirty');
+                    });
+                    document.querySelectorAll('.badge').forEach(b => {
+                        b.textContent = '';
+                        b.classList.remove('changed');
+                    });
+                    updateSummary();
+                    setTimeout(() => { msg.style.display = 'none'; }, 3000);
+                } else {
+                    msg.style.background = '#f8d7da';
+                    msg.style.color = '#721c24';
+                    msg.textContent = '✗ 保存失败：' + (data.error || '未知错误');
+                }
+            })
+            .catch(err => {
+                saveBtn.disabled = false;
+                saveBtn.textContent = '批量保存';
+                msg.style.background = '#f8d7da';
+                msg.style.color = '#721c24';
+                msg.textContent = '✗ 保存失败：' + err.message;
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>微信名片</title>
+  <meta name="description" content="">
+  <meta name="keywords" content="微信名片,电子名片">
+  
+  <!-- 微信分享封面 -->
+  <meta property="og:title" content="微信名片">
+  <meta property="og:description" content="">
+  <meta property="og:image" content="http://localhost:5000/uploads/20260415_063127_e659038a.png">
+  <meta property="og:type" content="website">
+  
+  <!-- 微信旧版本分享 -->
+  <meta itemprop="name" content="微信名片">
+  <meta itemprop="description" content="">
+  <meta itemprop="image" content="http://localhost:5000/uploads/20260415_063127_e659038a.png">
+  
+  <link rel="stylesheet" href="css/style.css">
+  <script async src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+</head>
+<body>
+  <div class="loading-skeleton" id="loadingSkeleton">
+    <div class="skeleton-card">
+      <div class="skeleton-logo"></div>
+      <div class="skeleton-name"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line medium"></div>
+      <div class="skeleton-btn-group">
+        <div class="skeleton-btn"></div>
+        <div class="skeleton-btn"></div>
+        <div class="skeleton-btn"></div>
+      </div>
+    </div>
+  </div>
+  <div class="page-container" id="pageContainer" style="display:none;">
+    <div class="unified-card-wrapper">
+      <div class="info-card-wrapper">
+        <div class="info-card">
+          <div class="info-card-bg"></div>
+          <div class="logo-container">
+            <img class="logo" id="logo" src="" alt="Logo">
+          </div>
+          <div class="info-content">
+            <div class="name" id="name"></div>
+            <div class="phone" id="phone"></div>
+            <div class="title" id="title"></div>
+            <div class="title" id="title2"></div>
+            <div class="company" id="company"></div>
+            <div class="email" id="email"></div>
+            <div class="address" id="address"></div>
+          </div>
+          <div class="button-group">
+            <button class="btn btn-blue-gradient" id="btnShare">推荐给TA</button>
+            <button class="btn btn-blue-gradient" id="btnCopy">复制信息</button>
+            <button class="btn btn-blue-gradient" id="btnCall">一键拨号</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-sections" id="contentSections"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  
+  <div class="share-guide" id="shareGuide">
+    <div class="share-guide-content">
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M13 3v2h4.59L12 10.59 13.41 12 19 6.41V11h2V3h-8zm-2 16H6.41L12 13.41 10.59 12 5 17.59V13H3v8h8v-2z'/%3E%3C/svg%3E" alt="分享指引" class="share-guide-icon">
+      <p>点击右上角「...」分享给好友</p>
+      <button class="share-guide-close" id="closeShareGuide">我知道了</button>
+    </div>
+  </div>
+
+  <div class="call-confirm" id="callConfirm">
+    <div class="call-confirm-content">
+      <p class="call-confirm-title">确认拨号</p>
+      <p class="call-confirm-phone" id="confirmPhone"></p>
+      <div class="call-confirm-buttons">
+        <button class="call-confirm-btn cancel" id="cancelCall">取消</button>
+        <button class="call-confirm-btn confirm" id="confirmCall">拨打</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="notice-popup" id="noticePopup">
+    <div class="notice-popup-content">
+      <div class="notice-popup-header">
+        <div class="notice-icon">📢</div>
+        <div class="notice-popup-title" id="noticePopupTitle"></div>
+        <button class="notice-popup-close" id="closeNoticePopup">&times;</button>
+      </div>
+      <div class="notice-popup-body" id="noticePopupBody"></div>
+      <div class="notice-popup-footer" id="noticePopupFooter"></div>
+    </div>
+  </div>
+
+  <div class="error-retry" id="errorRetry" style="display:none;">
+    <div class="error-retry-content">
+      <div class="error-icon">⚠️</div>
+      <p class="error-message">数据加载失败</p>
+      <button class="retry-btn" onclick="location.reload()">点击重试</button>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/vcard.js"></script>
+  <script src="js/wechat-jssdk.js"></script>
+  <script src="js/main-dynamic.js"></script>
+</body>
+</html>

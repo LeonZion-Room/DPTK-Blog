@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微信名片 - 编辑分组</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .section-item {
+            cursor: grab;
+            transition: all 0.2s;
+        }
+        .section-item:active {
+            cursor: grabbing;
+        }
+        .section-item.dragging {
+            opacity: 0.5;
+        }
+        .section-item.drag-over {
+            border: 2px dashed #3b82f6;
+            background: #eff6ff;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="max-w-4xl mx-auto py-8 px-4">
+        <!-- Header -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">✏️ 编辑分组: {{ group.title }}</h1>
+                    <p class="text-sm text-gray-500 mt-1">ID: {{ group_id }}</p>
+                </div>
+                <div class="space-x-2">
+                    <a href="/admin" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 text-sm">返回管理</a>
+                    <a href="/?page={{ group_id }}&dev=1" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">开发预览</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Group Settings -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">分组设置</h2>
+            <form id="groupForm" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">分组名称</label>
+                        <input type="text" id="groupTitle" value="{{ group.title }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">分享标题</label>
+                        <input type="text" id="shareTitle" value="{{ group.share_title or '' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">分享描述</label>
+                    <input type="text" id="shareDesc" value="{{ group.share_desc or '' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">分享图标 URL</label>
+                    <input type="text" id="shareIcon" value="{{ group.share_icon or '' }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </form>
+        </div>
+
+        <!-- Sections List -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">组件列表</h2>
+                <button id="addSectionBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm">
+                    + 添加组件
+                </button>
+            </div>
+            <div id="sectionsContainer" class="space-y-3">
+                <!-- Sections will be rendered here -->
+            </div>
+            <div class="mt-6 pt-4 border-t">
+                <button id="saveBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm">
+                    保存更改
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Section Modal -->
+    <div id="addModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
+            <h3 class="text-lg font-bold mb-4">添加新组件</h3>
+            <form id="addForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">组件类型</label>
+                    <select id="sectionType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="title">标题 (Title)</option>
+                        <option value="contact">联系人卡片 (Contact)</option>
+                        <option value="text">文本段落 (Text)</option>
+                        <option value="image">图片 (Image)</option>
+                        <option value="button">按钮 (Button)</option>
+                        <option value="divider">分割线 (Divider)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">标题文本</label>
+                    <input type="text" id="sectionTitle" placeholder="组件标题" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="closeAddModal()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">取消</button>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">添加</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let group = {{ group | tojson }};
+        let draggedItem = null;
+
+        function renderSections() {
+            const container = document.getElementById('sectionsContainer');
+            container.innerHTML = '';
+
+            if (!group.sections || group.sections.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">暂无组件，点击上方按钮添加</p>';
+                return;
+            }
+
+            group.sections.forEach((section, index) => {
+                const div = document.createElement('div');
+                div.className = 'section-item bg-gray-50 border border-gray-200 rounded-lg p-4';
+                div.draggable = true;
+                div.dataset.index = index;
+                
+                const typeLabels = {
+                    'title': '📝 标题',
+                    'contact': '👤 联系人',
+                    'text': '📄 文本',
+                    'image': '🖼️ 图片',
+                    'button': '🔘 按钮',
+                    'divider': '➖ 分割线'
+                };
+                
+                div.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-gray-400 cursor-move">⋮⋮</span>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">${section.title || '未命名组件'}</h3>
+                                <p class="text-xs text-gray-500">${typeLabels[section.type] || section.type}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="editSection(${index})" class="bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-300">
+                                ✏️ 编辑
+                            </button>
+                            <button onclick="deleteSection(${index})" class="bg-red-100 text-red-700 px-3 py-1 rounded text-sm hover:bg-red-200">
+                                🗑️ 删除
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // Drag events
+                div.addEventListener('dragstart', (e) => {
+                    draggedItem = div;
+                    div.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+
+                div.addEventListener('dragend', () => {
+                    div.classList.remove('dragging');
+                    draggedItem = null;
+                    document.querySelectorAll('.section-item').forEach(item => {
+                        item.classList.remove('drag-over');
+                    });
+                });
+
+                div.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    if (draggedItem && draggedItem !== div) {
+                        div.classList.add('drag-over');
+                    }
+                });
+
+                div.addEventListener('dragleave', () => {
+                    div.classList.remove('drag-over');
+                });
+
+                div.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    div.classList.remove('drag-over');
+                    if (draggedItem && draggedItem !== div) {
+                        const fromIndex = parseInt(draggedItem.dataset.index);
+                        const toIndex = parseInt(div.dataset.index);
+                        const item = group.sections.splice(fromIndex, 1)[0];
+                        group.sections.splice(toIndex, 0, item);
+                        renderSections();
+                    }
+                });
+
+                container.appendChild(div);
+            });
+        }
+
+        function editSection(index) {
+            const section = group.sections[index];
+            const newTitle = prompt('编辑组件标题:', section.title || '');
+            if (newTitle !== null) {
+                section.title = newTitle;
+                renderSections();
+            }
+        }
+
+        function deleteSection(index) {
+            if (confirm(`确定要删除组件 "${group.sections[index].title || '未命名'}" 吗？`)) {
+                group.sections.splice(index, 1);
+                renderSections();
+            }
+        }
+
+        document.getElementById('addSectionBtn').addEventListener('click', () => {
+            document.getElementById('addModal').classList.remove('hidden');
+        });
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.add('hidden');
+            document.getElementById('addForm').reset();
+        }
+
+        document.getElementById('addForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const type = document.getElementById('sectionType').value;
+            const title = document.getElementById('sectionTitle').value.trim() || '新组件';
+            
+            if (!group.sections) group.sections = [];
+            
+            const newSection = { type, title };
+            
+            // Add default data based on type
+            if (type === 'contact') {
+                newSection.name = title;
+                newSection.title = '';
+                newSection.phone = '';
+                newSection.email = '';
+            } else if (type === 'title') {
+                newSection.level = 2;
+                newSection.color = '#667eea';
+            } else if (type === 'text') {
+                newSection.content = '';
+            } else if (type === 'image') {
+                newSection.url = '';
+            } else if (type === 'button') {
+                newSection.url = '#';
+                newSection.text = title;
+            }
+            
+            group.sections.push(newSection);
+            closeAddModal();
+            renderSections();
+        });
+
+        document.getElementById('saveBtn').addEventListener('click', async () => {
+            // Update group settings
+            group.title = document.getElementById('groupTitle').value.trim();
+            group.share_title = document.getElementById('shareTitle').value.trim();
+            group.share_desc = document.getElementById('shareDesc').value.trim();
+            group.share_icon = document.getElementById('shareIcon').value.trim();
+
+            try {
+                // Load current db
+                const resp = await fetch('/api/components');
+                const data = await resp.json();
+                const db = data.data;
+                
+                // Update the group in db
+                const groupIndex = db.pages.findIndex(p => p.id === '{{ group_id }}');
+                if (groupIndex !== -1) {
+                    db.pages[groupIndex] = group;
+                }
+                
+                // Save
+                const saveResp = await fetch('/api/components', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(db)
+                });
+                const saveData = await saveResp.json();
+                if (saveData.code === 0) {
+                    alert('保存成功！');
+                } else {
+                    alert('保存失败：' + saveData.msg);
+                }
+            } catch (err) {
+                alert('保存失败：' + err.message);
+            }
+        });
+
+        renderSections();
+    </script>
+</body>
+</html>

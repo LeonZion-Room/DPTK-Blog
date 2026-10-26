@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>页面管理</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            background: linear-gradient(90deg, #3c8ce7 0%, #15c0eb 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .header .back {
+            float: right;
+            color: white;
+            text-decoration: none;
+            margin-top: 5px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #1E63B3;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        .page-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .page-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .page-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        .page-item h3 {
+            color: #1E63B3;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .page-item p {
+            color: #666;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .page-url {
+            margin: 15px 0;
+        }
+        .url-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        .url-input input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+            background: #f8f9fa;
+        }
+        .url-input button {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+        .page-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #3c8ce7 0%, #15c0eb 100%);
+            color: white;
+        }
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .create-button {
+            margin-bottom: 30px;
+        }
+        .flash {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        .empty-state h3 {
+            margin-bottom: 10px;
+        }
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+    </style>
+    <script>
+        function copyUrl(pageId) {
+            const input = document.getElementById('url-' + pageId);
+            input.select();
+            input.setSelectionRange(0, 99999); // 兼容移动设备
+            
+            try {
+                document.execCommand('copy');
+                showToast('链接已复制到剪贴板');
+            } catch (err) {
+                console.error('复制失败:', err);
+                showToast('复制失败，请手动复制');
+            }
+        }
+        
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => document.body.removeChild(toast), 300);
+            }, 2000);
+        }
+    </script>
+</head>
+<body>
+    <div class="header">
+        <h1>页面管理</h1>
+        <a href="{{ url_for('admin') }}" class="back">返回首页</a>
+    </div>
+    
+    <div class="container">
+        
+        <div class="create-button">
+            <a href="{{ url_for('create_page') }}"><button class="btn btn-primary">创建新页面</button></a>
+        </div>
+        
+        <div class="card">
+            <h2>页面列表</h2>
+            
+            {% if pages %}
+                <div class="page-list">
+                    {% for page in pages %}
+                        <div class="page-item">
+                            <h3>{{ page.title }}</h3>
+                            <p><strong>页面ID:</strong> {{ page.id }}</p>
+                            <p><strong>区块数量:</strong> {{ page.sections|length }}</p>
+                            <div class="page-url">
+                                <p><strong>引用链接:</strong></p>
+                                <div class="url-input">
+                                    <input type="text" value="{{ current_domain }}/index-dynamic.html?page={{ page.id }}" readonly id="url-{{ page.id }}">
+                                    <button class="btn btn-secondary" onclick="copyUrl('{{ page.id }}')">复制</button>
+                                </div>
+                            </div>
+                            <div class="page-actions">
+                                <a href="{{ url_for('edit_page_sections', page_id=page.id) }}"><button class="btn btn-primary">编辑内容</button></a>
+                                <a href="{{ url_for('edit_page', page_id=page.id) }}"><button class="btn btn-secondary">编辑页面</button></a>
+                                <form action="{{ url_for('set_default_page', page_id=page.id) }}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn btn-secondary">设为默认</button>
+                                </form>
+                                <form action="{{ url_for('delete_page', page_id=page.id) }}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn btn-danger" onclick="return confirm('确定要删除这个页面吗？');">删除</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <h3>暂无页面</h3>
+                    <p>请点击上方按钮创建新页面</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

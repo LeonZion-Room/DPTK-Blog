@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>页面思维导图</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .header h1 {
+            font-size: 24px;
+            color: #333;
+        }
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        .btn-success {
+            background: #4caf50;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #388e3c;
+        }
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+        .filter-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .filter-header h3 {
+            font-size: 16px;
+            color: #333;
+        }
+        .filter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .filter-tag {
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 2px solid #e0e0e0;
+            background: #f5f5f5;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .filter-tag:hover {
+            border-color: #667eea;
+            background: #e8eaf6;
+        }
+        .filter-tag.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .filter-count {
+            margin-left: 6px;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        .mindmap-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: auto;
+            max-height: calc(100vh - 350px);
+        }
+        .tree {
+            list-style: none;
+        }
+        .tree ul {
+            list-style: none;
+            padding-left: 40px;
+            position: relative;
+        }
+        .tree ul::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e0e0e0;
+        }
+        .tree li {
+            position: relative;
+            padding: 10px 0;
+        }
+        .tree li::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            width: 20px;
+            height: 2px;
+            background: #e0e0e0;
+        }
+        .tree > li::before {
+            display: none;
+        }
+        .tree > li > ul::before {
+            left: 20px;
+        }
+        .node {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .node:hover {
+            background: #e8f5e9;
+            border-color: #4caf50;
+            transform: translateX(5px);
+        }
+        .node.level-0 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .node.level-0:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #6a3d91 100%);
+        }
+        .node.level-1 {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            font-weight: 600;
+        }
+        .node.level-2 {
+            background: #e8f5e9;
+            border-color: #4caf50;
+        }
+        .node.level-3 {
+            background: #fff3e0;
+            border-color: #ff9800;
+        }
+        .node.level-4 {
+            background: #fce4ec;
+            border-color: #e91e63;
+        }
+        .node-title {
+            flex: 1;
+        }
+        .node-actions {
+            display: flex;
+            gap: 6px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .node:hover .node-actions {
+            opacity: 1;
+        }
+        .node-action {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .node-action.view {
+            background: #2196f3;
+            color: white;
+        }
+        .node-action.view:hover {
+            background: #1976d2;
+        }
+        .node-action.edit {
+            background: #ff9800;
+            color: white;
+        }
+        .node-action.edit:hover {
+            background: #f57c00;
+        }
+        .node-action.copy {
+            background: #9c27b0;
+            color: white;
+        }
+        .node-action.copy:hover {
+            background: #7b1fa2;
+        }
+        .node-action.copy-path {
+            background: #00bcd4;
+            color: white;
+        }
+        .node-action.copy-path:hover {
+            background: #0097a7;
+        }
+        .node-action.add-child {
+            background: #4caf50;
+            color: white;
+        }
+        .node-action.add-child:hover {
+            background: #388e3c;
+        }
+        .node-action.note {
+            background: #607d8b;
+            color: white;
+        }
+        .node-action.note:hover {
+            background: #455a64;
+        }
+        .node-action.delete {
+            background: #f44336;
+            color: white;
+        }
+        .node-action.delete:hover {
+            background: #d32f2f;
+        }
+        .node-count {
+            background: rgba(0,0,0,0.1);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        .node.level-0 .node-count {
+            background: rgba(255,255,255,0.3);
+        }
+        .node-note-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff9800;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 10000;
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 100%;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+        .modal.show .modal-content {
+            transform: scale(1);
+        }
+        .modal-header {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            transition: border-color 0.2s;
+        }
+        .modal-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .modal-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            transition: border-color 0.2s;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+        .modal-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .modal-hint {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .modal-actions .btn {
+            padding: 10px 24px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        .empty-state svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        .empty-state p {
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧠 页面思维导图</h1>
+        <div class="header-actions">
+            <button class="btn btn-success" onclick="showAddPageModal()">➕ 新增页面</button>
+            <a href="{{ url_for('attributes_view') }}" class="btn btn-secondary">属性视图</a>
+            <a href="{{ url_for('admin') }}" class="btn btn-secondary">管理首页</a>
+        </div>
+    </div>
+    
+    <div class="filter-section">
+        <div class="filter-header">
+            <h3>🔍 属性筛选</h3>
+            <button class="btn btn-secondary" onclick="clearFilters()" style="padding: 6px 12px; font-size: 13px;">清空筛选</button>
+        </div>
+        <div class="filter-tags" id="filterTags"></div>
+    </div>
+    
+    <div class="mindmap-container">
+        <ul class="tree" id="mindmap"></ul>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <!-- 新增页面弹窗 -->
+    <div class="modal" id="addPageModal">
+        <div class="modal-content">
+            <div class="modal-header">新增页面</div>
+            <input type="text" class="modal-input" id="pageTitleInput" placeholder="例如：投控-主营业务-城市开发-新页面">
+            <div class="modal-hint">
+                 提示：使用"-"分隔属性层级<br>
+                例如：一级-二级-三级-页面名称
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeAddPageModal()">取消</button>
+                <button class="btn btn-primary" onclick="addNewPage()">创建</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 新增子页面弹窗 -->
+    <div class="modal" id="addChildModal">
+        <div class="modal-content">
+            <div class="modal-header">新增子页面</div>
+            <div class="modal-hint" id="addChildHint"></div>
+            <input type="text" class="modal-input" id="childPageTitleInput" placeholder="输入子页面名称">
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeAddChildModal()">取消</button>
+                <button class="btn btn-primary" onclick="addNewChildPage()">创建</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 节点备注弹窗 -->
+    <div class="modal" id="noteModal">
+        <div class="modal-content">
+            <div class="modal-header" id="noteModalHeader">节点备注</div>
+            <div class="modal-hint" id="noteHint"></div>
+            <textarea class="modal-textarea" id="noteInput" placeholder="输入备注内容..."></textarea>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeNoteModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveNote()">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const config = {{ config | tojson }};
+        const serverUrl = window.location.origin;
+        let activeFilters = [];
+        let currentNotePath = '';
+        let currentNotePageId = '';
+        let addChildPath = '';
+        
+        function parseAttributes(title) {
+            if (!title) return [];
+            return title.split('-').map(s => s.trim()).filter(s => s);
+        }
+        
+        function getAllAttributes() {
+            const attrSet = new Set();
+            config.pages.forEach(page => {
+                const attrs = parseAttributes(page.title);
+                attrs.forEach(attr => attrSet.add(attr));
+            });
+            return Array.from(attrSet).sort();
+        }
+        
+        function getAttributeCounts() {
+            const counts = {};
+            config.pages.forEach(page => {
+                const attrs = parseAttributes(page.title);
+                attrs.forEach(attr => {
+                    counts[attr] = (counts[attr] || 0) + 1;
+                });
+            });
+            return counts;
+        }
+        
+        function renderFilters() {
+            const counts = getAttributeCounts();
+            const filterTags = document.getElementById('filterTags');
+            let html = '';
+            
+            Object.entries(counts).forEach(([attr, count]) => {
+                const isActive = activeFilters.includes(attr);
+                html += `<div class="filter-tag ${isActive ? 'active' : ''}" onclick="toggleFilter('${attr}')">`;
+                html += `${attr}<span class="filter-count">(${count})</span>`;
+                html += '</div>';
+            });
+            
+            filterTags.innerHTML = html;
+        }
+        
+        function toggleFilter(attr) {
+            const index = activeFilters.indexOf(attr);
+            if (index > -1) {
+                activeFilters.splice(index, 1);
+            } else {
+                activeFilters.push(attr);
+            }
+            renderFilters();
+            renderMindmap();
+        }
+        
+        function clearFilters() {
+            activeFilters = [];
+            renderFilters();
+            renderMindmap();
+        }
+        
+        function filterPages(pages) {
+            if (activeFilters.length === 0) return pages;
+            return pages.filter(page => {
+                const attrs = parseAttributes(page.title);
+                return activeFilters.some(f => attrs.includes(f));
+            });
+        }
+        
+        function buildMindmap() {
+            const tree = {};
+            const filteredPages = filterPages(config.pages);
+            
+            filteredPages.forEach(page => {
+                const attrs = parseAttributes(page.title);
+                let current = tree;
+                attrs.forEach((attr, index) => {
+                    if (!current[attr]) {
+                        current[attr] = { _children: {}, _pages: [] };
+                    }
+                    if (index === attrs.length - 1) {
+                        current[attr]._pages.push(page);
+                    }
+                    current = current[attr]._children;
+                });
+            });
+            
+            return tree;
+        }
+        
+        function hasNoteForPath(path) {
+            if (!path) return false;
+            if (config.nodeNotes && config.nodeNotes[path]) return true;
+            // Check if any page in this path has a note
+            const pages = config.pages.filter(p => {
+                const attrs = parseAttributes(p.title);
+                const pagePath = attrs.join('-');
+                return pagePath === path || pagePath.startsWith(path + '-');
+            });
+            return pages.some(p => p.note);
+        }
+        
+        function renderTree(tree, level = 0, path = []) {
+            let html = '';
+            
+            Object.entries(tree).forEach(([name, node]) => {
+                const pages = node._pages || [];
+                const hasChildren = Object.keys(node._children).length > 0;
+                const currentPath = [...path, name];
+                const fullPath = currentPath.join('-');
+                const nodeHasNote = hasNoteForPath(fullPath);
+                
+                html += '<li>';
+                html += `<div class="node level-${level}" data-path="${fullPath}">`;
+                html += `<span class="node-title">${name}${nodeHasNote ? '<span class="node-note-indicator" title="有备注"></span>' : ''}</span>`;
+                html += `<span class="node-count">${pages.length} 个页面</span>`;
+                
+                // Actions for all nodes
+                html += '<div class="node-actions">';
+                html += `<button class="node-action copy-path" onclick="copyNodePath('${fullPath}')">复制路径</button>`;
+                html += `<button class="node-action add-child" onclick="showAddChildModal('${fullPath}')">新增子页面</button>`;
+                html += `<button class="node-action note" onclick="showNoteModal('${fullPath}', '')">备注</button>`;
+                
+                if (pages.length > 0) {
+                    const firstPage = pages[0];
+                    html += `<button class="node-action view" onclick="viewPage('${firstPage.id}')">查看</button>`;
+                    html += `<button class="node-action edit" onclick="editPage('${firstPage.id}')">编辑</button>`;
+                    html += `<button class="node-action copy" onclick="copyPageLink('${firstPage.id}')">复制链接</button>`;
+                    html += `<button class="node-action delete" onclick="deletePage('${firstPage.id}', '${firstPage.title}')">删除</button>`;
+                }
+                html += '</div>';
+                
+                html += '</div>';
+                
+                if (hasChildren || pages.length > 1) {
+                    html += '<ul>';
+                    html += renderTree(node._children, level + 1, currentPath);
+                    
+                    if (pages.length > 1) {
+                        pages.forEach((page) => {
+                            const pagePath = parseAttributes(page.title).join('-');
+                            const pageHasNote = page.note || (config.nodeNotes && config.nodeNotes[pagePath]);
+                            html += '<li>';
+                            html += `<div class="node level-${level + 1}">`;
+                            html += `<span class="node-title">${page.title.split('-').pop()}${pageHasNote ? '<span class="node-note-indicator" title="有备注"></span>' : ''}</span>`;
+                            html += '<div class="node-actions" style="opacity:1;">';
+                            html += `<button class="node-action copy-path" onclick="copyNodePath('${pagePath}')">复制路径</button>`;
+                            html += `<button class="node-action add-child" onclick="showAddChildModal('${pagePath}')">新增子页面</button>`;
+                            html += `<button class="node-action note" onclick="showNoteModal('${pagePath}', '${page.id}')">备注</button>`;
+                            html += `<button class="node-action view" onclick="viewPage('${page.id}')">查看</button>`;
+                            html += `<button class="node-action edit" onclick="editPage('${page.id}')">编辑</button>`;
+                            html += `<button class="node-action copy" onclick="copyPageLink('${page.id}')">复制链接</button>`;
+                            html += `<button class="node-action delete" onclick="deletePage('${page.id}', '${page.title}')">删除</button>`;
+                            html += '</div>';
+                            html += '</div>';
+                            html += '</li>';
+                        });
+                    }
+                    
+                    html += '</ul>';
+                }
+                
+                html += '</li>';
+            });
+            
+            return html;
+        }
+        
+        function renderMindmap() {
+            const mindmap = document.getElementById('mindmap');
+            const tree = buildMindmap();
+            const html = renderTree(tree);
+            
+            if (!html) {
+                mindmap.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3 3h18v18H3V3zm16 16V5H5v14h14zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2z"/>
+                        </svg>
+                        <p>没有匹配的页面</p>
+                    </div>
+                `;
+            } else {
+                mindmap.innerHTML = html;
+            }
+        }
+        
+        function viewPage(pageId) {
+            window.open('/?page=' + pageId, '_blank');
+        }
+        
+        function editPage(pageId) {
+            window.open('/admin/pages/sections/' + pageId, '_blank');
+        }
+        
+        function copyPageLink(pageId) {
+            const url = serverUrl + '/?page=' + pageId;
+            navigator.clipboard.writeText(url).then(() => {
+                showToast('链接已复制到剪贴板');
+            }).catch(() => {
+                fallbackCopy(url);
+            });
+        }
+        
+        function copyNodePath(path) {
+            navigator.clipboard.writeText(path).then(() => {
+                showToast('路径已复制：' + path);
+            }).catch(() => {
+                fallbackCopy(path);
+            });
+        }
+        
+        function copyPagePath(title) {
+            copyNodePath(title);
+        }
+        
+        function fallbackCopy(text) {
+            const input = document.createElement('input');
+            input.value = text;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            showToast('已复制到剪贴板');
+        }
+        
+        function deletePage(pageId, pageTitle) {
+            if (!confirm(`确定要删除页面吗？\n\n页面：${pageTitle}\nID: ${pageId}\n\n此操作不可恢复！`)) {
+                return;
+            }
+            
+            fetch(serverUrl + '/admin/pages/delete/' + pageId, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('页面删除成功');
+                    window.location.href = window.location.pathname + '?t=' + Date.now();
+                } else {
+                    alert('删除失败: ' + (data.error || '未知错误'));
+                }
+            })
+            .catch(error => {
+                alert('删除失败: ' + error.message);
+            });
+        }
+        
+        // === 新增页面 ===
+        function showAddPageModal() {
+            document.getElementById('addPageModal').classList.add('show');
+            document.getElementById('pageTitleInput').focus();
+        }
+        
+        function closeAddPageModal() {
+            document.getElementById('addPageModal').classList.remove('show');
+            document.getElementById('pageTitleInput').value = '';
+        }
+        
+        function addNewPage() {
+            const title = document.getElementById('pageTitleInput').value.trim();
+            if (!title) {
+                alert('请输入页面标题');
+                return;
+            }
+            
+            const pageId = 'page_' + Date.now();
+            
+            fetch(serverUrl + '/admin/pages/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'id=' + encodeURIComponent(pageId) + '&title=' + encodeURIComponent(title)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('页面创建成功');
+                    closeAddPageModal();
+                    setTimeout(() => {
+                        window.location.href = window.location.pathname + '?t=' + Date.now();
+                    }, 500);
+                } else {
+                    alert('创建失败: ' + (data.error || '未知错误'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('创建失败: ' + error.message);
+            });
+        }
+        
+        // === 新增子页面 ===
+        function showAddChildModal(parentPath) {
+            addChildPath = parentPath;
+            document.getElementById('addChildHint').innerHTML = `父节点：<strong>${parentPath}</strong><br>将在该节点下创建新子页面`;
+            document.getElementById('childPageTitleInput').value = '';
+            document.getElementById('addChildModal').classList.add('show');
+            document.getElementById('childPageTitleInput').focus();
+        }
+        
+        function closeAddChildModal() {
+            document.getElementById('addChildModal').classList.remove('show');
+            addChildPath = '';
+        }
+        
+        function addNewChildPage() {
+            const childName = document.getElementById('childPageTitleInput').value.trim();
+            if (!childName) {
+                alert('请输入子页面名称');
+                return;
+            }
+            
+            const fullTitle = addChildPath + '-' + childName;
+            const pageId = 'page_' + Date.now();
+            
+            fetch(serverUrl + '/admin/pages/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'id=' + encodeURIComponent(pageId) + '&title=' + encodeURIComponent(fullTitle)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('子页面创建成功');
+                    closeAddChildModal();
+                    setTimeout(() => {
+                        window.location.href = window.location.pathname + '?t=' + Date.now();
+                    }, 500);
+                } else {
+                    alert('创建失败: ' + (data.error || '未知错误'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('创建失败: ' + error.message);
+            });
+        }
+        
+        // === 节点备注 ===
+        function showNoteModal(path, pageId) {
+            currentNotePath = path;
+            currentNotePageId = pageId;
+            
+            document.getElementById('noteModalHeader').textContent = '节点备注 - ' + path;
+            document.getElementById('noteHint').innerHTML = `路径：<strong>${path}</strong>`;
+            
+            // Get existing note
+            let existingNote = '';
+            if (pageId) {
+                const page = config.pages.find(p => p.id === pageId);
+                if (page && page.note) existingNote = page.note;
+            }
+            if (!existingNote && config.nodeNotes && config.nodeNotes[path]) {
+                existingNote = config.nodeNotes[path];
+            }
+            
+            document.getElementById('noteInput').value = existingNote;
+            document.getElementById('noteModal').classList.add('show');
+            document.getElementById('noteInput').focus();
+        }
+        
+        function closeNoteModal() {
+            document.getElementById('noteModal').classList.remove('show');
+            currentNotePath = '';
+            currentNotePageId = '';
+        }
+        
+        function saveNote() {
+            const note = document.getElementById('noteInput').value.trim();
+            
+            if (currentNotePageId) {
+                // Save to page
+                fetch(serverUrl + '/admin/pages/update-note', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'pageId=' + encodeURIComponent(currentNotePageId) + '&note=' + encodeURIComponent(note)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('备注保存成功');
+                        closeNoteModal();
+                        setTimeout(() => {
+                            window.location.href = window.location.pathname + '?t=' + Date.now();
+                        }, 300);
+                    } else {
+                        alert('保存失败: ' + (data.error || '未知错误'));
+                    }
+                })
+                .catch(error => {
+                    alert('保存失败: ' + error.message);
+                });
+            } else {
+                // Save to node path
+                fetch(serverUrl + '/admin/node-notes/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'path=' + encodeURIComponent(currentNotePath) + '&note=' + encodeURIComponent(note)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('备注保存成功');
+                        closeNoteModal();
+                        setTimeout(() => {
+                            window.location.href = window.location.pathname + '?t=' + Date.now();
+                        }, 300);
+                    } else {
+                        alert('保存失败: ' + (data.error || '未知错误'));
+                    }
+                })
+                .catch(error => {
+                    alert('保存失败: ' + error.message);
+                });
+            }
+        }
+        
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+        
+        // Enter key handlers
+        document.getElementById('pageTitleInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addNewPage();
+        });
+        document.getElementById('childPageTitleInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addNewChildPage();
+        });
+        document.getElementById('noteInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey) saveNote();
+        });
+        
+        renderFilters();
+        renderMindmap();
+    </script>
+</body>
+</html>

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>{{ share_title or '微信名片' }}</title>
+  <meta name="description" content="{{ share_desc or '' }}">
+  <meta name="keywords" content="微信名片,电子名片">
+  
+  <!-- 微信分享封面 -->
+  <meta property="og:title" content="{{ share_title or '微信名片' }}">
+  <meta property="og:description" content="{{ share_desc or '' }}">
+  <meta property="og:image" content="{{ share_icon or current_domain + '/uploads/20260415_063127_e659038a.png' }}">
+  <meta property="og:type" content="website">
+  
+  <!-- 微信旧版本分享 -->
+  <meta itemprop="name" content="{{ share_title or '微信名片' }}">
+  <meta itemprop="description" content="{{ share_desc or '' }}">
+  <meta itemprop="image" content="{{ share_icon or current_domain + '/uploads/20260415_063127_e659038a.png' }}">
+  
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    @media screen and (max-width: 360px) {
+      .unified-card-wrapper {
+        margin: {{ mobile_gap or 10 }}px !important;
+        border-radius: {{ (mobile_gap or 10) + 6 }}px !important;
+      }
+    }
+  </style>
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    // 设置PDF.js工作器
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  </script>
+  <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+</head>
+<body>
+  <div class="page-container">
+    <div class="unified-card-wrapper">
+              <div class="info-card-wrapper">
+        <div class="info-card">
+          <div class="info-card-bg"></div>
+          <div class="logo-container">
+            <img class="logo" id="logo" src="" alt="Logo">
+          </div>
+          <div class="info-content">
+            <div class="name" id="name"></div>
+            <div class="phone" id="phone"></div>
+            <div class="title" id="title"></div>
+            <div class="title" id="title2"></div>
+            <div class="email" id="email"></div>
+          </div>
+          <div class="button-group">
+            <button class="btn btn-blue-gradient" id="btnCopy">复制信息</button>
+            <a id="btnLink" class="btn btn-blue-gradient" style="display: none;"></a>
+            <button class="btn btn-blue-gradient" id="btnCall">一键拨号</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-sections" id="contentSections"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  
+  <div class="share-guide" id="shareGuide">
+    <div class="share-guide-content">
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M13 3v2h4.59L12 10.59 13.41 12 19 6.41V11h2V3h-8zm-2 16H6.41L12 13.41 10.59 12 5 17.59V13H3v8h8v-2z'/%3E%3C/svg%3E" alt="分享指引" class="share-guide-icon">
+      <p>点击右上角「...」分享给好友</p>
+      <button class="share-guide-close" id="closeShareGuide">我知道了</button>
+    </div>
+  </div>
+
+  <div class="call-confirm" id="callConfirm">
+    <div class="call-confirm-content">
+      <p class="call-confirm-title">确认拨号</p>
+      <p class="call-confirm-phone" id="confirmPhone"></p>
+      <div class="call-confirm-buttons">
+        <button class="call-confirm-btn cancel" id="cancelCall">取消</button>
+        <button class="call-confirm-btn confirm" id="confirmCall">拨打</button>
+      </div>
+    </div>
+  </div>
+
+
+
+  <div class="notice-popup" id="noticePopup">
+    <div class="notice-popup-content">
+      <div class="notice-popup-header">
+        <div class="notice-icon">📢</div>
+        <div class="notice-popup-title" id="noticePopupTitle"></div>
+        <button class="notice-popup-close" id="closeNoticePopup">&times;</button>
+      </div>
+      <div class="notice-popup-body" id="noticePopupBody"></div>
+      <div class="notice-popup-footer" id="noticePopupFooter"></div>
+    </div>
+  </div>
+
+  <script src="js/config.js?v={{ now_ts }}"></script>
+  <!-- 页面管理面板 -->
+  <div class="page-admin-panel" id="pageAdminPanel" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 16px; padding: 30px; width: 90%; max-width: 400px; max-height: 80vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="margin: 0; color: #333;">页面设置</h3>
+        <button id="closeAdminPanel" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
+      </div>
+      <form id="pageAdminForm">
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">页面ID</label>
+          <input type="text" id="adminPageId" readonly style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #f5f5f5; color: #666;">
+        </div>
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">页面标题</label>
+          <input type="text" id="adminPageTitle" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+        </div>
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">分组</label>
+          <select id="adminPageGroup" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+          </select>
+        </div>
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">分享标题</label>
+          <input type="text" id="adminShareTitle" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+        </div>
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px; color: #333; font-weight: 500;">分享描述</label>
+          <input type="text" id="adminShareDesc" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button type="submit" style="flex: 1; padding: 12px; background: linear-gradient(90deg, #3c8ce7, #15c0eb); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">保存</button>
+          <button type="button" id="cancelAdminPanel" style="flex: 1; padding: 12px; background: #f5f5f5; color: #333; border: 1px solid #ddd; border-radius: 8px; font-weight: bold; cursor: pointer;">取消</button>
+        </div>
+      </form>
+      <div id="adminMessage" style="margin-top: 15px; padding: 10px; border-radius: 8px; text-align: center; display: none;"></div>
+    </div>
+  </div>
+
+  <!-- 管理入口按钮 -->
+  <div id="adminTrigger" style="position: fixed; bottom: 10px; right: 10px; width: 60px; height: 60px; z-index: 9998; opacity: 0;"></div>
+  <button id="openAdminPanel" title="页面设置" style="position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(90deg, #3c8ce7, #15c0eb); color: white; border: none; font-size: 20px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 9999; display: none;">⚙</button>
+
+  <script>
+    // 页面管理功能
+    (function() {
+      let currentPageId = null;
+      let groups = [];
+      let clickCount = 0;
+      let clickTimer = null;
+
+      // 从URL获取页面ID
+      const urlParams = new URLSearchParams(window.location.search);
+      currentPageId = urlParams.get('page') || 'home';
+
+      // 彩蛋：连续点击右下角5次显示管理按钮
+      document.getElementById('adminTrigger').addEventListener('click', function() {
+        clickCount++;
+        clearTimeout(clickTimer);
+        
+        if (clickCount >= 5) {
+          clickCount = 0;
+          document.getElementById('openAdminPanel').style.display = 'block';
+          // 显示提示
+          const toast = document.createElement('div');
+          toast.style.cssText = 'position:fixed;bottom:80px;right:20px;background:rgba(0,0,0,0.7);color:white;padding:10px 20px;border-radius:8px;font-size:14px;z-index:10000;';
+          toast.textContent = '已显示管理入口';
+          document.body.appendChild(toast);
+          setTimeout(() => toast.remove(), 2000);
+        } else {
+          clickTimer = setTimeout(() => clickCount = 0, 2000);
+        }
+      });
+
+      // 打开管理面板
+      document.getElementById('openAdminPanel').addEventListener('click', openAdminPanel);
+      document.getElementById('closeAdminPanel').addEventListener('click', closeAdminPanel);
+      document.getElementById('cancelAdminPanel').addEventListener('click', closeAdminPanel);
+      document.getElementById('pageAdminPanel').addEventListener('click', function(e) {
+        if (e.target === this) closeAdminPanel();
+      });
+
+      // 表单提交
+      document.getElementById('pageAdminForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        await savePageSettings();
+      });
+
+      async function openAdminPanel() {
+        const panel = document.getElementById('pageAdminPanel');
+        panel.style.display = 'flex';
+
+        // 加载分组
+        await loadGroups();
+
+        // 加载当前页面信息
+        document.getElementById('adminPageId').value = currentPageId;
+        
+        // 从配置中获取页面信息
+        if (window.DynamicConfig && DynamicConfig.config) {
+          const page = DynamicConfig.config.currentPage || {};
+          document.getElementById('adminPageTitle').value = page.title || '';
+          document.getElementById('adminShareTitle').value = page.share_title || '';
+          document.getElementById('adminShareDesc').value = page.share_desc || '';
+          
+          // 设置分组
+          const groupSelect = document.getElementById('adminPageGroup');
+          for (let option of groupSelect.options) {
+            if (option.value === (page.groupId || 'default')) {
+              option.selected = true;
+              break;
+            }
+          }
+        }
+      }
+
+      function closeAdminPanel() {
+        document.getElementById('pageAdminPanel').style.display = 'none';
+        document.getElementById('adminMessage').style.display = 'none';
+      }
+
+      async function loadGroups() {
+        try {
+          const response = await fetch('/api/groups');
+          const data = await response.json();
+          groups = data.groups || [];
+          
+          const select = document.getElementById('adminPageGroup');
+          select.innerHTML = '';
+          groups.forEach(group => {
+            const option = document.createElement('option');
+            option.value = group.id;
+            option.textContent = group.name;
+            select.appendChild(option);
+          });
+        } catch (error) {
+          console.error('加载分组失败:', error);
+        }
+      }
+
+      async function savePageSettings() {
+        const messageEl = document.getElementById('adminMessage');
+        
+        try {
+          const response = await fetch('/api/update-page', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              pageId: currentPageId,
+              title: document.getElementById('adminPageTitle').value,
+              groupId: document.getElementById('adminPageGroup').value,
+              share_title: document.getElementById('adminShareTitle').value,
+              share_desc: document.getElementById('adminShareDesc').value
+            })
+          });
+
+          const result = await response.json();
+          
+          if (result.success) {
+            messageEl.textContent = '保存成功!';
+            messageEl.style.background = '#d4edda';
+            messageEl.style.color = '#155724';
+            messageEl.style.display = 'block';
+            
+            // 更新页面标题
+            if (DynamicConfig && DynamicConfig.config) {
+              if (!DynamicConfig.config.currentPage) {
+                DynamicConfig.config.currentPage = {};
+              }
+              DynamicConfig.config.currentPage.title = document.getElementById('adminPageTitle').value;
+              DynamicConfig.config.currentPage.groupId = document.getElementById('adminPageGroup').value;
+              DynamicConfig.config.currentPage.share_title = document.getElementById('adminShareTitle').value;
+              DynamicConfig.config.currentPage.share_desc = document.getElementById('adminShareDesc').value;
+            }
+            
+            setTimeout(closeAdminPanel, 1500);
+          } else {
+            throw new Error(result.error || '保存失败');
+          }
+        } catch (error) {
+          messageEl.textContent = error.message;
+          messageEl.style.background = '#f8d7da';
+          messageEl.style.color = '#721c24';
+          messageEl.style.display = 'block';
+        }
+      }
+    })();
+  </script>
+
+
+  <script src="js/vcard.js?v={{ now_ts }}"></script>
+  <script src="js/wechat-jssdk.js?v={{ now_ts }}"></script>
+  <script src="js/main-dynamic.js?v={{ now_ts }}"></script>
+</body>
+</html>

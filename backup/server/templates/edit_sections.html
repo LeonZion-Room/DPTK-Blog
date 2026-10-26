@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑内容区块</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            background: linear-gradient(90deg, #3c8ce7 0%, #15c0eb 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .header .back {
+            float: right;
+            color: white;
+            text-decoration: none;
+            margin-top: 5px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        h2 {
+            color: #1E63B3;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        .section {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .section-title {
+            font-weight: bold;
+            color: #333;
+        }
+        .remove-section {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .image-grid {
+            margin-top: 10px;
+        }
+        .image-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        .remove-image {
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 12px;
+            cursor: pointer;
+            float: right;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #3c8ce7 0%, #15c0eb 100%);
+            color: white;
+        }
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        .flash {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
+        }
+        .color-presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .color-preset {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .color-preset:hover {
+            transform: scale(1.15);
+        }
+        .color-preset.selected {
+            border-color: #333;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>编辑内容区块</h1>
+        <a href="{{ url_for('pages') }}" class="back">返回页面管理</a>
+    </div>
+    
+    <div class="container">
+        
+        <div class="card">
+            <form method="post" action="{{ url_for('edit_page_sections', page_id=page_id) }}">
+                <h2>📌 分享卡片设置</h2>
+                <div class="form-group">
+                    <label for="share_title">分享标题</label>
+                    <input type="text" id="share_title" name="share_title" value="{{ page.share_title or '' }}" placeholder="微信分享时显示的标题">
+                </div>
+                <div class="form-group">
+                    <label for="share_desc">分享描述</label>
+                    <input type="text" id="share_desc" name="share_desc" value="{{ page.share_desc or '' }}" placeholder="微信分享时显示的描述">
+                </div>
+                <div class="form-group">
+                    <label for="share_icon">分享图标URL</label>
+                    <input type="text" id="share_icon" name="share_icon" value="{{ page.share_icon or '' }}" placeholder="微信分享时显示的图标">
+                </div>
+                
+                <hr style="margin: 30px 0; border: none; border-top: 2px solid #e0e0e0;">
+                
+                <input type="hidden" id="section_count" name="section_count" value="0">
+                
+                <div id="sections-container">
+                    {% for i, section in sections|enumerate %}
+                        <div class="section" data-index="{{ i }}">
+                            <div class="section-header">
+                                <div class="section-title">区块 {{ i + 1 }}</div>
+                                <button type="button" class="remove-section" onclick="removeSection({{ i }})" data-index="{{ i }}">&times;</button>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="section_type_{{ i }}">区块类型</label>
+                                <select id="section_type_{{ i }}" name="section_type_{{ i }}" onchange="updateSectionForm({{ i }})">
+                                    <option value="title" {% if section.type == 'title' %}selected{% endif %}>标题</option>
+                                    <option value="image" {% if section.type == 'image' %}selected{% endif %}>单张图片</option>
+                                    <option value="video" {% if section.type == 'video' %}selected{% endif %}>视频</option>
+                                    <option value="grid" {% if section.type == 'grid' %}selected{% endif %}>图片网格</option>
+                                    <option value="carousel" {% if section.type == 'carousel' %}selected{% endif %}>轮播图</option>
+                                    <option value="tabs" {% if section.type == 'tabs' %}selected{% endif %}>标签页</option>
+                                    <option value="contact" {% if section.type == 'contact' %}selected{% endif %}>名片信息</option>
+                                    <option value="notice" {% if section.type == 'notice' %}selected{% endif %}>公告栏</option>
+                                </select>
+                            </div>
+                            
+                            {% if section.type == 'title' %}
+                                <div class="form-group">
+                                    <label for="section_level_{{ i }}">标题级别</label>
+                                    <select id="section_level_{{ i }}" name="section_level_{{ i }}">
+                                        <option value="1" {% if section.level == 1 %}selected{% endif %}>一级标题</option>
+                                        <option value="2" {% if section.level == 2 %}selected{% endif %}>二级标题</option>
+                                        <option value="3" {% if section.level == 3 %}selected{% endif %}>三级标题</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="section_title_{{ i }}">标题内容</label>
+                                    <input type="text" id="section_title_{{ i }}" name="section_title_{{ i }}" value="{{ section.title }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="section_color_{{ i }}">标题颜色（可选）</label>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <input type="color" id="section_color_{{ i }}" name="section_color_{{ i }}" value="{{ section.color or '#667eea' }}" style="width: 60px; height: 40px; padding: 2px; cursor: pointer;">
+                                        <span style="font-size: 14px; color: #666;">留空则使用主题默认颜色</span>
+                                    </div>
+                                    <div class="color-presets" data-target="section_color_{{ i }}">
+                                        <div class="color-preset" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" data-color="#667eea" title="紫粉渐变"></div>
+                                        <div class="color-preset" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);" data-color="#11998e" title="蓝绿渐变"></div>
+                                        <div class="color-preset" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" data-color="#f093fb" title="橙红渐变"></div>
+                                        <div class="color-preset" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);" data-color="#4facfe" title="青蓝渐变"></div>
+                                        <div class="color-preset" style="background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);" data-color="#f6d365" title="暖金渐变"></div>
+                                        <div class="color-preset" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);" data-color="#30cfd0" title="深紫渐变"></div>
+                                        <div class="color-preset" style="background: #e74c3c;" data-color="#e74c3c" title="红色"></div>
+                                        <div class="color-preset" style="background: #e67e22;" data-color="#e67e22" title="橙色"></div>
+                                        <div class="color-preset" style="background: #f1c40f;" data-color="#f1c40f" title="黄色"></div>
+                                        <div class="color-preset" style="background: #2ecc71;" data-color="#2ecc71" title="绿色"></div>
+                                        <div class="color-preset" style="background: #3498db;" data-color="#3498db" title="蓝色"></div>
+                                        <div class="color-preset" style="background: #9b59b6;" data-color="#9b59b6" title="紫色"></div>
+                                        <div class="color-preset" style="background: #1abc9c;" data-color="#1abc9c" title="青色"></div>
+                                        <div class="color-preset" style="background: #34495e;" data-color="#34495e" title="深蓝"></div>
+                                        <div class="color-preset" style="background: #e91e63;" data-color="#e91e63" title="粉红"></div>
+                                        <div class="color-preset" style="background: #00bcd4;" data-color="#00bcd4" title="青蓝"></div>
+                                        <div class="color-preset" style="background: #ff5722;" data-color="#ff5722" title="深橙"></div>
+                                        <div class="color-preset" style="background: #795548;" data-color="#795548" title="棕色"></div>
+                                        <div class="color-preset" style="background: #607d8b;" data-color="#607d8b" title="灰色"></div>
+                                        <div class="color-preset" style="background: #000000;" data-color="#000000" title="黑色"></div>
+                                        <div class="color-preset" style="background: #ffffff;" data-color="#ffffff" title="白色" style="border: 1px solid #ddd;"></div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="section_logo_{{ i }}">标题图标URL（可选）</label>
+                                    <input type="text" id="section_logo_{{ i }}" name="section_logo_{{ i }}" value="{{ section.logo or '' }}" placeholder="标题前显示的图标">
+                                </div>
+                            {% elif section.type == 'image' %}
+                                <div class="form-group">
+                                    <label for="section_src_{{ i }}">图片URL</label>
+                                    <input type="text" id="section_src_{{ i }}" name="section_src_{{ i }}" value="{{ section.src }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="section_jump_{{ i }}">跳转链接（可选）</label>
+                                    <input type="text" id="section_jump_{{ i }}" name="section_jump_{{ i }}" value="{{ section.jump }}">
+                                </div>
+                                <div class="form-group">
+                                    <label>预览</label>
+                                    <div style="width: 200px; height: 200px; border: 1px solid #ddd; overflow: hidden; margin-top: 10px;">
+                                        {% if section.src %}
+                                        <img src="{{ section.src }}" style="width: 100%; height: auto; max-height: 100%; object-fit: contain;" alt="预览">
+                                        {% else %}
+                                        <img src="" style="width: 100%; height: auto; max-height: 100%; object-fit: contain;" alt="预览">
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% elif section.type == 'video' %}
+                                <div class="form-group">
+                                    <label for="section_src_{{ i }}">视频URL</label>
+                                    <input type="text" id="section_src_{{ i }}" name="section_src_{{ i }}" value="{{ section.src }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="section_poster_{{ i }}">封面图片URL（可选）</label>
+                                    <input type="text" id="section_poster_{{ i }}" name="section_poster_{{ i }}" value="{{ section.poster }}">
+                                </div>
+                            {% elif section.type == 'grid' %}
+                                <input type="hidden" id="image_count_{{ i }}" name="image_count_{{ i }}" value="{{ section.images|length }}">
+                                <div class="image-grid" id="image_grid_{{ i }}">
+                                    {% for j, image in section.images|enumerate %}
+                                        <div class="image-item">
+                                            <button type="button" class="remove-image" onclick="removeImage({{ i }}, {{ j }})">&times;</button>
+                                            <div class="form-group">
+                                                <label>图片{{ j + 1 }} URL</label>
+                                                <input type="text" name="image_src_{{ i }}_{{ j }}" value="{{ image.src }}" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>跳转链接（可选）</label>
+                                                <input type="text" name="image_jump_{{ i }}_{{ j }}" value="{{ image.jump }}">
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <button type="button" class="btn-success" onclick="addImage({{ i }})">添加图片</button>
+                            {% elif section.type == 'carousel' %}
+                                <input type="hidden" id="carousel_item_count_{{ i }}" name="carousel_item_count_{{ i }}" value="{{ section['items']|length }}">
+                                <div class="image-grid" id="carousel_items_{{ i }}">
+                                    {% for j, item in section['items']|enumerate %}
+                                        <div class="image-item">
+                                            <button type="button" class="remove-image" onclick="removeCarouselItem({{ i }}, {{ j }})">&times;</button>
+                                            <div class="form-group">
+                                                <label>轮播项{{ j + 1 }} 图片URL</label>
+                                                <input type="text" name="carousel_item_src_{{ i }}_{{ j }}" value="{{ item.src }}" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>标题（可选）</label>
+                                                <input type="text" name="carousel_item_title_{{ i }}_{{ j }}" value="{{ item.title or '' }}">
+                                            </div>
+                                            <div class="form-group">
+                                                <label>跳转链接（可选）</label>
+                                                <input type="text" name="carousel_item_jump_{{ i }}_{{ j }}" value="{{ item.jump or '' }}">
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <button type="button" class="btn-success" onclick="addCarouselItem({{ i }})">添加轮播项</button>
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="carousel_autoplay_{{ i }}" name="carousel_autoplay_{{ i }}" {% if section.autoplay %}checked{% endif %}>
+                                        自动播放
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label for="carousel_interval_{{ i }}">播放间隔（毫秒）</label>
+                                    <input type="number" id="carousel_interval_{{ i }}" name="carousel_interval_{{ i }}" value="{{ section.interval or 3000 }}">
+                                </div>
+                            {% elif section.type == 'tabs' %}
+                                <input type="hidden" id="tabs_count_{{ i }}" name="tabs_count_{{ i }}" value="{{ section['tabs']|length }}">
+                                <div id="tabs_container_{{ i }}">
+                                    {% for j, tab in section['tabs']|enumerate %}
+                                        <div class="image-item" style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+                                            <div class="form-group">
+                                                <label>标签{{ j + 1 }} 标题</label>
+                                                <input type="text" name="tab_title_{{ i }}_{{ j }}" value="{{ tab.title }}" required>
+                                            </div>
+                                            <input type="hidden" name="tab_{{ j }}_section_count_{{ i }}" value="{{ tab['sections']|length }}">
+                                            <button type="button" class="btn-success" onclick="addTabSection({{ i }}, {{ j }})">添加内容区块</button>
+                                            <div id="tab_sections_{{ i }}_{{ j }}">
+                                            {% for k, tab_section in tab['sections']|enumerate %}
+                                                <div style="margin-left: 20px; padding: 10px; background: #f9f9f9; border-radius: 4px; margin-bottom: 8px;">
+                                                    <div class="form-group">
+                                                        <label>内容区块{{ k + 1 }} 类型</label>
+                                                        <select name="tab_{{ j }}_section_type_{{ i }}_{{ k }}" onchange="updateTabSectionFields({{ i }}, {{ j }}, {{ k }}, this.value)" required>
+                                                            <option value="title" {% if tab_section.type == 'title' %}selected{% endif %}>标题</option>
+                                                            <option value="image" {% if tab_section.type == 'image' %}selected{% endif %}>图片</option>
+                                                            <option value="video" {% if tab_section.type == 'video' %}selected{% endif %}>视频</option>
+                                                            <option value="grid" {% if tab_section.type == 'grid' %}selected{% endif %}>图片网格</option>
+                                                        </select>
+                                                    </div>
+                                                    {% if tab_section.type == 'title' %}
+                                                        <div class="form-group">
+                                                            <label>标题内容</label>
+                                                            <input type="text" name="tab_{{ j }}_section_title_{{ i }}_{{ k }}" value="{{ tab_section.title }}">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label>标题级别</label>
+                                                            <select name="tab_{{ j }}_section_level_{{ i }}_{{ k }}">
+                                                                <option value="1" {% if tab_section.level == 1 %}selected{% endif %}>一级标题</option>
+                                                                <option value="2" {% if tab_section.level == 2 %}selected{% endif %}>二级标题</option>
+                                                                <option value="3" {% if tab_section.level == 3 %}selected{% endif %}>三级标题</option>
+                                                            </select>
+                                                        </div>
+                                                    {% elif tab_section.type == 'image' %}
+                                                        <div class="form-group">
+                                                            <label>图片URL</label>
+                                                            <input type="text" name="tab_{{ j }}_section_src_{{ i }}_{{ k }}" value="{{ tab_section.src }}">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label>跳转链接（可选）</label>
+                                                            <input type="text" name="tab_{{ j }}_section_jump_{{ i }}_{{ k }}" value="{{ tab_section.jump }}">
+                                                        </div>
+                                                    {% elif tab_section.type == 'video' %}
+                                                        <div class="form-group">
+                                                            <label>视频URL</label>
+                                                            <input type="text" name="tab_{{ j }}_section_src_{{ i }}_{{ k }}" value="{{ tab_section.src }}">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label>封面图URL（可选）</label>
+                                                            <input type="text" name="tab_{{ j }}_section_poster_{{ i }}_{{ k }}" value="{{ tab_section.poster }}">
+                                                        </div>
+                                                    {% elif tab_section.type == 'grid' %}
+                                                        <input type="hidden" name="tab_{{ j }}_image_count_{{ i }}_{{ k }}" value="{{ tab_section['images']|length }}">
+                                                        {% for l, tab_image in tab_section['images']|enumerate %}
+                                                            <div class="form-group">
+                                                                <label>图片{{ l + 1 }} URL</label>
+                                                                <input type="text" name="tab_{{ j }}_image_src_{{ i }}_{{ k }}_{{ l }}" value="{{ tab_image.src }}">
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label>跳转链接（可选）</label>
+                                                                <input type="text" name="tab_{{ j }}_image_jump_{{ i }}_{{ k }}_{{ l }}" value="{{ tab_image.jump }}">
+                                                            </div>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                </div>
+                                            {% endfor %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <button type="button" class="btn-success" onclick="addTab({{ i }})">添加标签</button>
+                            {% elif section.type == 'contact' %}
+                                <div class="form-group">
+                                    <label for="contact_bgTheme_{{ i }}">背景主题</label>
+                                    <select id="contact_bgTheme_{{ i }}" name="contact_bgTheme_{{ i }}">
+                                        <option value="theme-purple-pink" {% if section.bgTheme == 'theme-purple-pink' or (not section.bgTheme and section.theme == 'theme-purple-pink') %}selected{% endif %}>紫粉渐变 (默认)</option>
+                                        <option value="theme-blue-green" {% if section.bgTheme == 'theme-blue-green' or (not section.bgTheme and section.theme == 'theme-blue-green') %}selected{% endif %}>蓝绿渐变</option>
+                                        <option value="theme-orange-red" {% if section.bgTheme == 'theme-orange-red' or (not section.bgTheme and section.theme == 'theme-orange-red') %}selected{% endif %}>橙红渐变</option>
+                                        <option value="theme-cyan-blue" {% if section.bgTheme == 'theme-cyan-blue' or (not section.bgTheme and section.theme == 'theme-cyan-blue') %}selected{% endif %}>青蓝渐变</option>
+                                        <option value="theme-gold" {% if section.bgTheme == 'theme-gold' or (not section.bgTheme and section.theme == 'theme-gold') %}selected{% endif %}>暖金渐变</option>
+                                        <option value="theme-dark-purple" {% if section.bgTheme == 'theme-dark-purple' or (not section.bgTheme and section.theme == 'theme-dark-purple') %}selected{% endif %}>深紫渐变</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="contact_contentTheme_{{ i }}">内容主题（按钮、标题）</label>
+                                    <select id="contact_contentTheme_{{ i }}" name="contact_contentTheme_{{ i }}">
+                                        <option value="theme-purple-pink" {% if section.contentTheme == 'theme-purple-pink' or (not section.contentTheme and section.theme == 'theme-purple-pink') %}selected{% endif %}>紫粉渐变 (默认)</option>
+                                        <option value="theme-blue-green" {% if section.contentTheme == 'theme-blue-green' or (not section.contentTheme and section.theme == 'theme-blue-green') %}selected{% endif %}>蓝绿渐变</option>
+                                        <option value="theme-orange-red" {% if section.contentTheme == 'theme-orange-red' or (not section.contentTheme and section.theme == 'theme-orange-red') %}selected{% endif %}>橙红渐变</option>
+                                        <option value="theme-cyan-blue" {% if section.contentTheme == 'theme-cyan-blue' or (not section.contentTheme and section.theme == 'theme-cyan-blue') %}selected{% endif %}>青蓝渐变</option>
+                                        <option value="theme-gold" {% if section.contentTheme == 'theme-gold' or (not section.contentTheme and section.theme == 'theme-gold') %}selected{% endif %}>暖金渐变</option>
+                                        <option value="theme-dark-purple" {% if section.contentTheme == 'theme-dark-purple' or (not section.contentTheme and section.theme == 'theme-dark-purple') %}selected{% endif %}>深紫渐变</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="contact_name_{{ i }}">姓名</label>
+                                    <input type="text" id="contact_name_{{ i }}" name="contact_name_{{ i }}" value="{{ section.name }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="contact_title_{{ i }}">职位/单位（第一行）</label>
+                                    <input type="text" id="contact_title_{{ i }}" name="contact_title_{{ i }}" value="{{ section.title }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="contact_title2_{{ i }}">职位（第二行）</label>
+                                    <input type="text" id="contact_title2_{{ i }}" name="contact_title2_{{ i }}" value="{{ section.title2 }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="contact_phone_{{ i }}">联系电话</label>
+                                    <input type="text" id="contact_phone_{{ i }}" name="contact_phone_{{ i }}" value="{{ section.phone }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="contact_email_{{ i }}">邮箱</label>
+                                    <input type="text" id="contact_email_{{ i }}" name="contact_email_{{ i }}" value="{{ section.email }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="contact_logo_{{ i }}">Logo图片URL</label>
+                                    <input type="text" id="contact_logo_{{ i }}" name="contact_logo_{{ i }}" value="{{ section.logo }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="contact_company_{{ i }}">公司/单位名称</label>
+                                    <input type="text" id="contact_company_{{ i }}" name="contact_company_{{ i }}" value="{{ section.company }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="contact_address_{{ i }}">地址</label>
+                                    <input type="text" id="contact_address_{{ i }}" name="contact_address_{{ i }}" value="{{ section.address }}">
+                                </div>
+                            {% elif section.type == 'notice' %}
+                                <div class="form-group">
+                                    <label for="notice_title_{{ i }}">公告标题</label>
+                                    <input type="text" id="notice_title_{{ i }}" name="notice_title_{{ i }}" value="{{ section.title }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="notice_content_{{ i }}">公告内容</label>
+                                    <textarea id="notice_content_{{ i }}" name="notice_content_{{ i }}" rows="6" required>{{ section.content }}</textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="notice_tag_{{ i }}">标签（可选）</label>
+                                    <input type="text" id="notice_tag_{{ i }}" name="notice_tag_{{ i }}" value="{{ section.tag }}" placeholder="如：重要通知、最新消息等">
+                                </div>
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="notice_autoPopup_{{ i }}" name="notice_autoPopup_{{ i }}" {% if section.autoPopup %}checked{% endif %}>
+                                        打开页面时自动弹出公告
+                                    </label>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <button type="button" class="btn-success" onclick="addSection()">添加新区块</button>
+                
+                <div class="button-group">
+                    <button type="submit" class="btn-primary">保存修改</button>
+                    <a href="{{ url_for('pages') }}"><button type="button" class="btn-secondary">取消</button></a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        function checkHasContactSection() {
+            const sections = document.querySelectorAll('#sections-container .section');
+            for (let section of sections) {
+                const select = section.querySelector('select[name^="section_type_"]');
+                if (select && select.value === 'contact') {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function addSection() {
+            const hasContact = checkHasContactSection();
+            const container = document.getElementById('sections-container');
+            const count = container.children.length;
+            
+            const section = document.createElement('div');
+            section.className = 'section';
+            section.setAttribute('data-index', count);
+            
+            let contactOptionDisabled = hasContact ? 'disabled' : '';
+            let contactOptionText = hasContact ? '名片信息 (已有)' : '名片信息';
+            
+            section.innerHTML = `
+                <div class="section-header">
+                    <div class="section-title">区块 ${count + 1}</div>
+                    <button type="button" class="remove-section" onclick="removeSection(${count})" data-index="${count}">&times;</button>
+                </div>
+                <div class="form-group">
+                    <label for="section_type_${count}">区块类型</label>
+                    <select id="section_type_${count}" name="section_type_${count}" onchange="updateSectionForm(${count})">
+                        <option value="title">标题</option>
+                        <option value="image">单张图片</option>
+                        <option value="video">视频</option>
+                        <option value="grid">图片网格</option>
+                        <option value="carousel">轮播图</option>
+                        <option value="tabs">标签页</option>
+                        <option value="notice">公告栏</option>
+                        <option value="contact" ${contactOptionDisabled}>${contactOptionText}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="section_level_${count}">标题级别</label>
+                    <select id="section_level_${count}" name="section_level_${count}">
+                        <option value="1">一级标题</option>
+                        <option value="2">二级标题</option>
+                        <option value="3">三级标题</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="section_title_${count}">标题内容</label>
+                    <input type="text" id="section_title_${count}" name="section_title_${count}" required>
+                </div>
+            `;
+            
+            container.appendChild(section);
+            document.getElementById('section_count').value = container.children.length;
+            console.log('添加区块后，区块数量:', container.children.length);
+        }
+        
+        function removeSection(index) {
+            const container = document.getElementById('sections-container');
+            const section = document.querySelector(`.section[data-index="${index}"]`);
+            if (section) {
+                section.remove();
+                
+                // 更新索引
+                const sections = container.querySelectorAll('.section');
+                sections.forEach((sec, i) => {
+                    sec.setAttribute('data-index', i);
+                    sec.querySelector('.section-title').textContent = `区块 ${i + 1}`;
+                });
+                
+                // 更新名片信息选项状态
+                updateContactOptions();
+                
+                document.getElementById('section_count').value = sections.length;
+                console.log('删除区块后，区块数量:', sections.length);
+            }
+        }
+
+        function updateContactOptions() {
+            const hasContact = checkHasContactSection();
+            const allSelects = document.querySelectorAll('#sections-container select[name^="section_type_"]');
+            
+            allSelects.forEach((select) => {
+                const contactOption = select.querySelector('option[value="contact"]');
+                if (contactOption) {
+                    if (select.value !== 'contact' && hasContact) {
+                        contactOption.disabled = true;
+                        contactOption.textContent = '名片信息 (已有)';
+                    } else {
+                        contactOption.disabled = false;
+                        contactOption.textContent = '名片信息';
+                    }
+                }
+            });
+        }
+        
+        function addImage(sectionIndex) {
+            const grid = document.getElementById(`image_grid_${sectionIndex}`);
+            const count = grid.children.length;
+            
+            const imageItem = document.createElement('div');
+            imageItem.className = 'image-item';
+            imageItem.innerHTML = `
+                <button type="button" class="remove-image" onclick="removeImage(${sectionIndex}, ${count})">&times;</button>
+                <div class="form-group">
+                    <label>图片${count + 1} URL</label>
+                    <input type="text" name="image_src_${sectionIndex}_${count}" required>
+                </div>
+                <div class="form-group">
+                    <label>跳转链接（可选）</label>
+                    <input type="text" name="image_jump_${sectionIndex}_${count}">
+                </div>
+            `;
+            
+            grid.appendChild(imageItem);
+            document.getElementById(`image_count_${sectionIndex}`).value = count + 1;
+        }
+        
+        function removeImage(sectionIndex, imageIndex) {
+            const grid = document.getElementById(`image_grid_${sectionIndex}`);
+            const imageItem = grid.children[imageIndex];
+            if (imageItem) {
+                imageItem.remove();
+                document.getElementById(`image_count_${sectionIndex}`).value = grid.children.length;
+            }
+        }
+        
+        function updateSectionForm(sectionIndex) {
+            const select = document.getElementById(`section_type_${sectionIndex}`);
+            const section = document.querySelector(`.section[data-index="${sectionIndex}"]`);
+            const type = select.value;
+            
+            // 找到区块类型选择器的form-group
+            const typeFormGroup = section.querySelector('.form-group');
+            
+            // 移除类型选择器之后的所有内容
+            let nextSibling = typeFormGroup.nextElementSibling;
+            while (nextSibling) {
+                const toRemove = nextSibling;
+                nextSibling = nextSibling.nextElementSibling;
+                toRemove.remove();
+            }
+            
+            // 添加新表单
+            if (type === 'title') {
+                const formHtml = `
+                    <div class="form-group">
+                        <label for="section_level_${sectionIndex}">标题级别</label>
+                        <select id="section_level_${sectionIndex}" name="section_level_${sectionIndex}">
+                            <option value="1">一级标题</option>
+                            <option value="2">二级标题</option>
+                            <option value="3">三级标题</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="section_title_${sectionIndex}">标题内容</label>
+                        <input type="text" id="section_title_${sectionIndex}" name="section_title_${sectionIndex}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="section_color_${sectionIndex}">标题颜色（可选）</label>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="color" id="section_color_${sectionIndex}" name="section_color_${sectionIndex}" value="#667eea" style="width: 60px; height: 40px; padding: 2px; cursor: pointer;">
+                            <span style="font-size: 14px; color: #666;">留空则使用主题默认颜色</span>
+                        </div>
+                        <div class="color-presets" data-target="section_color_${sectionIndex}">
+                            <div class="color-preset" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" data-color="#667eea" title="紫粉渐变"></div>
+                            <div class="color-preset" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);" data-color="#11998e" title="蓝绿渐变"></div>
+                            <div class="color-preset" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" data-color="#f093fb" title="橙红渐变"></div>
+                            <div class="color-preset" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);" data-color="#4facfe" title="青蓝渐变"></div>
+                            <div class="color-preset" style="background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);" data-color="#f6d365" title="暖金渐变"></div>
+                            <div class="color-preset" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);" data-color="#30cfd0" title="深紫渐变"></div>
+                            <div class="color-preset" style="background: #e74c3c;" data-color="#e74c3c" title="红色"></div>
+                            <div class="color-preset" style="background: #e67e22;" data-color="#e67e22" title="橙色"></div>
+                            <div class="color-preset" style="background: #f1c40f;" data-color="#f1c40f" title="黄色"></div>
+                            <div class="color-preset" style="background: #2ecc71;" data-color="#2ecc71" title="绿色"></div>
+                            <div class="color-preset" style="background: #3498db;" data-color="#3498db" title="蓝色"></div>
+                            <div class="color-preset" style="background: #9b59b6;" data-color="#9b59b6" title="紫色"></div>
+                            <div class="color-preset" style="background: #1abc9c;" data-color="#1abc9c" title="青色"></div>
+                            <div class="color-preset" style="background: #34495e;" data-color="#34495e" title="深蓝"></div>
+                            <div class="color-preset" style="background: #e91e63;" data-color="#e91e63" title="粉红"></div>
+                            <div class="color-preset" style="background: #00bcd4;" data-color="#00bcd4" title="青蓝"></div>
+                            <div class="color-preset" style="background: #ff5722;" data-color="#ff5722" title="深橙"></div>
+                            <div class="color-preset" style="background: #795548;" data-color="#795548" title="棕色"></div>
+                            <div class="color-preset" style="background: #607d8b;" data-color="#607d8b" title="灰色"></div>
+                            <div class="color-preset" style="background: #000000;" data-color="#000000" title="黑色"></div>
+                            <div class="color-preset" style="background: #ffffff;" data-color="#ffffff" title="白色" style="border: 1px solid #ddd;"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="section_logo_${sectionIndex}">标题图标URL（可选）</label>
+                        <input type="text" id="section_logo_${sectionIndex}" name="section_logo_${sectionIndex}" placeholder="标题前显示的图标">
+                    </div>
+                `;
+                typeFormGroup.insertAdjacentHTML('afterend', formHtml);
+            } else if (type === 'image') {
+                const formHtml = `
+                    <div class="form-group">
+                        <label for="section_src_${sectionIndex}">图片URL</label>
+                        <input type="text" id="section_src_${sectionIndex}" name="section_src_${sectionIndex}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="section_jump_${sectionIndex}">跳转链接（可选）</label>
+                        <input type="text" id="section_jump_${sectionIndex}" name="section_jump_${sectionIndex}">
+                    </div>
+                    <div class="form-group">
+                        <label>预览</label>
+                        <div style="width: 200px; height: 200px; border: 1px solid #ddd; overflow: hidden; margin-top: 10px;">
+                            <img src="" style="width: 100%; height: auto; max-height: 100%; object-fit: contain;" alt="预览">
+                        </div>
+                    </div>
+                `;
+                typeFormGroup.insertAdjacentHTML('afterend', formHtml);
+            } else if (type === 'video') {
+                const formHtml = `
+                    <div class="form-group">
+                        <label for="section_src_${sectionIndex}">视频URL</label>
+                        <input type="text" id="section_src_${sectionIndex}" name="section_src_${sectionIndex}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="section_poster_${sectionIndex}">封面图片URL（可选）</label>
+                        <input type="text" id="section_poster_${sectionIndex}" name="section_poster_${sectionIndex}">
+                    </div>
+                `;
+                typeFormGroup.insertAdjacentHTML('afterend', formHtml);
+            } else if (type === 'grid') {
+                const formHtml = `
+                    <input type="hidden" id="image_count_${sectionIndex}" name="image_count_${sectionIndex}" value="0">
+                    <div class="image-grid" id="image_grid_${sectionIndex}"></div>
+                    <button type="button" class="btn-success" onclick="addImage(${sectionIndex})">添加图片</button>
+                `;
+                typeFormGroup.insertAdjacentHTML('afterend', formHtml);
+            } else if (type === 'carousel') {
+                const formHtml = `
+                    <input type="hidden" id="carousel_item_count_${sectionIndex}" name="carousel_item_count_${sectionIndex}" value="0">
+                    <div class="image-grid" id="carousel_items_${sectionIndex}"></div>
+                    <button type="button" class="btn-success" onclick="addCarouselItem(${sectionIndex})">添加轮播项</button>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="carousel_autoplay_${sectionIndex}" name="carousel_autoplay_${sectionIndex}" checked>
+                            自动播放
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="carousel_interval_${sectionIndex}">播放间隔（毫秒）</label>
+                        <input type="text" id="carousel_interval_${sectionIndex}" name="carousel_interval_${sectionIndex}" value="3000" required>
+                    </div>
+                `;
+                typeFormGroup.insertAdjacentHTML('afterend', formHtml);
+            } else if (type === 'tabs') {
+                const formHtml = `
+                    <input type="hidden" id="tabs_count_${sectionIndex}" name="tabs_count_${sectionIndex}" value="0">
+                    <div id="tabs_container_${sectionIndex}"></div>
+                    <button type="button" class="btn-success" onclick="addTab(${sectionIndex})">添加标签</button>
+                `;
+                typeFormGroup.insertAdjacentHTML('afterend', formHtml);
+            } else if (type === 'contact') {
+                const formHtml = `
+                    <div class="form-group">
+                        <label for="contact_bgTheme_${sectionIndex}">背景主题</label>
+                        <select id="contact_bgTheme_${sectionIndex}" name="contact_bgTheme_${sectionIndex}">
+                            <option value="theme-purple-pink">紫粉渐变 (默认)</option>
+                            <option value="theme-blue-green">蓝绿渐变</option>
+                            <option value="theme-orange-red">橙红渐变</option>
+                            <option value="theme-cyan-blue">青蓝渐变</option>
+                            <option value="theme-gold">暖金渐变</option>
+                            <option value="theme-dark-purple">深紫渐变</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact_contentTheme_${sectionIndex}">内容主题（按钮、标题）</label>
+                        <select id="contact_contentTheme_${sectionIndex}" name="contact_contentTheme_${sectionIndex}">
+                            <option value="theme-purple-pink">紫粉渐变 (默认)</option>
+                            <option value="theme-blue-green">蓝绿渐变</option>
+                            <option value="theme-orange-red">橙红渐变</option>
+                            <option value="theme-cyan-blue">青蓝渐变</option>
+                            <option value="theme-gold">暖金渐变</option>
+                            <option value="theme-dark-purple">深紫渐变</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact_name_${sectionIndex}">姓名</label>
+                        <input type="text" id="contact_name_${sectionIndex}" name="contact_name_${sectionIndex}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact_title_${sectionIndex}">职位/单位（第一行）</label>
+                        <input type="text" id="contact_title_${sectionIndex}" name="contact_title_${sectionIndex}">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact_title2_${sectionIndex}">职位（第二行）</label>
+                        <input type="text" id="contact_title2_${sectionIndex}" name="contact_title2_${sectionIndex}">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact_phone_${sectionIndex}">联系电话</label>
+                        <input type="text" id="contact_phone_${sectionIndex}" name="contact_phone_${sectionIndex}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact_email_${sectionIndex}">邮箱</label>
+                        <input type="text" id="contact_email_${sectionIndex}" name="contact_email_${sectionIndex}">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact_logo_${sectionIndex}">Logo图片URL</label>
+                        <input type="text" id="contact_logo_${sectionIndex}" name="contact_logo_${sectionIndex}">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact_company_${sectionIndex}">公司/单位名称</label>
+                        <input type="text" id="contact_company_${sectionIndex}" name="contact_company_${sectionIndex}">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact_address_${sectionIndex}">地址</label>
+                        <input type="text" id="contact_address_${sectionIndex}" name="contact_address_${sectionIndex}">
+                    </div>
+                `;
+                typeFormGroup.insertAdjacentHTML('afterend', formHtml);
+            } else if (type === 'carousel') {
+                const formHtml = `
+                    <input type="hidden" id="carousel_item_count_${sectionIndex}" name="carousel_item_count_${sectionIndex}" value="0">
+                    <div class="image-grid" id="carousel_items_${sectionIndex}"></div>
+                    <button type="button" class="btn-success" onclick="addCarouselItem(${sectionIndex})">添加轮播项</button>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="carousel_autoplay_${sectionIndex}" name="carousel_autoplay_${sectionIndex}" checked>
+                            自动播放
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="carousel_interval_${sectionIndex}">播放间隔（毫秒）</label>
+                        <input type="text" id="carousel_interval_${sectionIndex}" name="carousel_interval_${sectionIndex}" value="3000" required>
+                    </div>
+                `;
+                typeFormGroup.insertAdjacentHTML('afterend', formHtml);
+            } else if (type === 'tabs') {
+                const formHtml = `
+                    <input type="hidden" id="tabs_count_${sectionIndex}" name="tabs_count_${sectionIndex}" value="0">
+                    <div id="tabs_container_${sectionIndex}"></div>
+                    <button type="button" class="btn-success" onclick="addTab(${sectionIndex})">添加标签页</button>
+                `;
+                typeFormGroup.insertAdjacentHTML('afterend', formHtml);
+            } else if (type === 'notice') {
+                const formHtml = `
+                    <div class="form-group">
+                        <label for="notice_title_${sectionIndex}">公告标题</label>
+                        <input type="text" id="notice_title_${sectionIndex}" name="notice_title_${sectionIndex}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="notice_content_${sectionIndex}">公告内容</label>
+                        <textarea id="notice_content_${sectionIndex}" name="notice_content_${sectionIndex}" rows="6" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="notice_tag_${sectionIndex}">标签（可选）</label>
+                        <input type="text" id="notice_tag_${sectionIndex}" name="notice_tag_${sectionIndex}" placeholder="如：重要通知、最新消息等">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="notice_autoPopup_${sectionIndex}" name="notice_autoPopup_${sectionIndex}">
+                            打开页面时自动弹出公告
+                        </label>
+                    </div>
+                `;
+                typeFormGroup.insertAdjacentHTML('afterend', formHtml);
+            }
+            
+            // 更新名片信息选项状态
+            updateContactOptions();
+            console.log('更新区块类型为:', type);
+            
+            // 重新绑定颜色预设
+            bindColorPresets();
+        }
+        
+        // 初始化区块数量
+        document.getElementById('section_count').value = document.getElementById('sections-container').children.length;
+        console.log('初始化区块数量:', document.getElementById('sections-container').children.length);
+        
+        // 预设颜色点击处理
+        function bindColorPresets() {
+            const presets = document.querySelectorAll('.color-preset');
+            presets.forEach(preset => {
+                preset.addEventListener('click', function() {
+                    const targetId = this.parentElement.getAttribute('data-target');
+                    const colorInput = document.getElementById(targetId);
+                    const color = this.getAttribute('data-color');
+                    
+                    if (colorInput) {
+                        colorInput.value = color;
+                        
+                        // 更新选中状态
+                        const allPresets = this.parentElement.querySelectorAll('.color-preset');
+                        allPresets.forEach(p => p.classList.remove('selected'));
+                        this.classList.add('selected');
+                    }
+                });
+            });
+        }
+        
+        // 初始化颜色预设选中状态
+        function initColorPresets() {
+            const colorInputs = document.querySelectorAll('input[type="color"][name^="section_color_"]');
+            colorInputs.forEach(input => {
+                const targetId = input.id;
+                const presetsContainer = document.querySelector(`.color-presets[data-target="${targetId}"]`);
+                if (presetsContainer) {
+                    const currentColor = input.value;
+                    const preset = presetsContainer.querySelector(`.color-preset[data-color="${currentColor}"]`);
+                    if (preset) {
+                        preset.classList.add('selected');
+                    }
+                }
+            });
+        }
+        
+        // 初始化
+        bindColorPresets();
+        initColorPresets();
+        
+        // 绑定图片预览更新
+        function bindImagePreview() {
+            const imageSections = document.querySelectorAll('.section');
+            imageSections.forEach((section, index) => {
+                const srcInput = section.querySelector('input[name^="section_src_"]');
+                const previewDiv = section.querySelector('[id^="image_preview_"]');
+                if (srcInput && previewDiv) {
+                    const img = previewDiv.querySelector('img');
+                    if (img && img.src && img.src !== window.location.href) {
+                        img.addEventListener('load', function() {
+                            const sectionIndex = section.getAttribute('data-index');
+                            updateSliderMaxHeight(sectionIndex);
+                        });
+                        if (img.complete && img.naturalHeight > 0) {
+                            const sectionIndex = section.getAttribute('data-index');
+                            updateSliderMaxHeight(sectionIndex);
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 绑定所有图片预览
+        bindImagePreview();
+        
+        // 当添加新图片区块时，重新绑定
+        window.addSection = function() {
+            const hasContact = checkHasContactSection();
+            const container = document.getElementById('sections-container');
+            const count = container.children.length;
+            
+            const section = document.createElement('div');
+            section.className = 'section';
+            section.setAttribute('data-index', count);
+            
+            let contactOptionDisabled = hasContact ? 'disabled' : '';
+            let contactOptionText = hasContact ? '名片信息 (已有)' : '名片信息';
+            
+            section.innerHTML = `
+                <div class="section-header">
+                    <div class="section-title">区块 ${count + 1}</div>
+                    <button type="button" class="remove-section" onclick="removeSection(${count})" data-index="${count}">&times;</button>
+                </div>
+                <div class="form-group">
+                    <label for="section_type_${count}">区块类型</label>
+                    <select id="section_type_${count}" name="section_type_${count}" onchange="updateSectionForm(${count})">
+                        <option value="title">标题</option>
+                        <option value="image">单张图片</option>
+                        <option value="video">视频</option>
+                        <option value="grid">图片网格</option>
+                        <option value="notice">公告栏</option>
+                        <option value="contact" ${contactOptionDisabled}>${contactOptionText}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="section_level_${count}">标题级别</label>
+                    <select id="section_level_${count}" name="section_level_${count}">
+                        <option value="1">一级标题</option>
+                        <option value="2">二级标题</option>
+                        <option value="3">三级标题</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="section_title_${count}">标题内容</label>
+                    <input type="text" id="section_title_${count}" name="section_title_${count}" required>
+                </div>
+            `;
+            
+            container.appendChild(section);
+            document.getElementById('section_count').value = container.children.length;
+            console.log('添加区块后，区块数量:', container.children.length);
+            
+            // 重新绑定图片预览
+            bindImagePreview();
+        };
+        
+        // 添加轮播图项
+        window.addCarouselItem = function(sectionIndex) {
+            const container = document.getElementById(`carousel_items_${sectionIndex}`);
+            const count = container.children.length;
+            
+            const item = document.createElement('div');
+            item.className = 'image-item';
+            item.innerHTML = `
+                <button type="button" class="remove-image" onclick="removeCarouselItem(${sectionIndex}, ${count})">×</button>
+                <div class="form-group">
+                    <label>轮播项${count + 1} 图片URL</label>
+                    <input type="text" name="carousel_item_src_${sectionIndex}_${count}" required>
+                </div>
+                <div class="form-group">
+                    <label>轮播项${count + 1} 标题（可选）</label>
+                    <input type="text" name="carousel_item_title_${sectionIndex}_${count}">
+                </div>
+                <div class="form-group">
+                    <label>轮播项${count + 1} 跳转链接（可选）</label>
+                    <input type="text" name="carousel_item_jump_${sectionIndex}_${count}">
+                </div>
+            `;
+            
+            container.appendChild(item);
+            document.getElementById(`carousel_item_count_${sectionIndex}`).value = count + 1;
+        };
+        
+        // 移除轮播图项
+        window.removeCarouselItem = function(sectionIndex, itemIndex) {
+            const container = document.getElementById(`carousel_items_${sectionIndex}`);
+            const item = container.children[itemIndex];
+            if (item) {
+                item.remove();
+                document.getElementById(`carousel_item_count_${sectionIndex}`).value = container.children.length;
+            }
+        };
+        
+        
+        // 添加标签
+        window.addTab = function(sectionIndex) {
+            const container = document.getElementById(`tabs_container_${sectionIndex}`);
+            const count = container.children.length;
+            
+            const tab = document.createElement('div');
+            tab.style.position = 'relative';
+            tab.style.marginBottom = '20px';
+            tab.style.padding = '15px';
+            tab.style.border = '1px solid #ddd';
+            tab.style.borderRadius = '8px';
+            tab.innerHTML = `
+                <button type="button" class="remove-image" style="position:absolute;right:10px;top:10px;" onclick="removeTab(${sectionIndex}, ${count})">&times;</button>
+                <div class="form-group">
+                    <label>标签${count + 1} 标题</label>
+                    <input type="text" name="tab_title_${sectionIndex}_${count}" required>
+                </div>
+                <input type="hidden" name="tab_${count}_section_count_${sectionIndex}" value="0">
+                <button type="button" class="btn-success" onclick="addTabSection(${sectionIndex}, ${count})">添加内容区块</button>
+                <div id="tab_sections_${sectionIndex}_${count}"></div>
+            `;
+            
+            container.appendChild(tab);
+            document.getElementById(`tabs_count_${sectionIndex}`).value = count + 1;
+        };
+        
+        // 移除标签
+        window.removeTab = function(sectionIndex, tabIndex) {
+            const container = document.getElementById(`tabs_container_${sectionIndex}`);
+            const tab = container.children[tabIndex];
+            if (tab) {
+                tab.remove();
+                document.getElementById(`tabs_count_${sectionIndex}`).value = container.children.length;
+            }
+        };
+        
+        // 添加标签页内容区块
+        window.addTabSection = function(sectionIndex, tabIndex) {
+            const tab = document.getElementById(`tabs_container_${sectionIndex}`).children[tabIndex];
+            const sectionsContainer = tab.querySelector(`#tab_sections_${sectionIndex}_${tabIndex}`);
+            const sectionCount = sectionsContainer.children.length;
+            
+            const sectionDiv = document.createElement('div');
+            sectionDiv.style.marginLeft = '20px';
+            sectionDiv.style.padding = '10px';
+            sectionDiv.style.background = '#f9f9f9';
+            sectionDiv.style.borderRadius = '4px';
+            sectionDiv.style.marginBottom = '8px';
+            sectionDiv.innerHTML = `
+                <div class="form-group">
+                    <label>内容区块${sectionCount + 1} 类型</label>
+                    <select name="tab_${tabIndex}_section_type_${sectionIndex}_${sectionCount}" onchange="updateTabSectionFields(${sectionIndex}, ${tabIndex}, ${sectionCount}, this.value)" required>
+                        <option value="title">标题</option>
+                        <option value="image">图片</option>
+                        <option value="video">视频</option>
+                        <option value="grid">图片网格</option>
+                    </select>
+                </div>
+                <div class="tab-section-fields" data-section="${sectionIndex}-${tabIndex}-${sectionCount}"></div>
+            `;
+            
+            sectionsContainer.appendChild(sectionDiv);
+            const sectionCountInput = tab.querySelector(`input[name="tab_${tabIndex}_section_count_${sectionIndex}"]`);
+            if (sectionCountInput) {
+                sectionCountInput.value = sectionCount + 1;
+            }
+            // 触发默认类型的字段渲染
+            const typeSelect = sectionDiv.querySelector('select');
+            if (typeSelect) {
+                updateTabSectionFields(sectionIndex, tabIndex, sectionCount, typeSelect.value);
+            }
+        };
+        
+        // 更新标签页内容区块字段
+        window.updateTabSectionFields = function(sectionIndex, tabIndex, sectionCount, type) {
+            const tab = document.getElementById(`tabs_container_${sectionIndex}`).children[tabIndex];
+            const sectionsContainer = tab.querySelector(`#tab_sections_${sectionIndex}_${tabIndex}`);
+            const sectionDiv = sectionsContainer.children[sectionCount];
+            const fieldsDiv = sectionDiv.querySelector('.tab-section-fields');
+            
+            let fieldsHtml = '';
+            if (type === 'title') {
+                fieldsHtml = `
+                    <div class="form-group">
+                        <label>标题内容</label>
+                        <input type="text" name="tab_${tabIndex}_section_title_${sectionIndex}_${sectionCount}">
+                    </div>
+                    <div class="form-group">
+                        <label>标题级别</label>
+                        <select name="tab_${tabIndex}_section_level_${sectionIndex}_${sectionCount}">
+                            <option value="1">一级标题</option>
+                            <option value="2">二级标题</option>
+                            <option value="3">三级标题</option>
+                        </select>
+                    </div>
+                `;
+            } else if (type === 'image') {
+                fieldsHtml = `
+                    <div class="form-group">
+                        <label>图片URL</label>
+                        <input type="text" name="tab_${tabIndex}_section_src_${sectionIndex}_${sectionCount}">
+                    </div>
+                    <div class="form-group">
+                        <label>跳转链接（可选）</label>
+                        <input type="text" name="tab_${tabIndex}_section_jump_${sectionIndex}_${sectionCount}">
+                    </div>
+                `;
+            } else if (type === 'video') {
+                fieldsHtml = `
+                    <div class="form-group">
+                        <label>视频URL</label>
+                        <input type="text" name="tab_${tabIndex}_section_src_${sectionIndex}_${sectionCount}">
+                    </div>
+                    <div class="form-group">
+                        <label>封面图URL（可选）</label>
+                        <input type="text" name="tab_${tabIndex}_section_poster_${sectionIndex}_${sectionCount}">
+                    </div>
+                `;
+            } else if (type === 'grid') {
+                fieldsHtml = `
+                    <input type="hidden" name="tab_${tabIndex}_image_count_${sectionIndex}_${sectionCount}" value="0">
+                    <div class="image-grid" id="tab_${tabIndex}_image_grid_${sectionIndex}_${sectionCount}"></div>
+                    <button type="button" class="btn-success" onclick="addTabGridImage(${sectionIndex}, ${tabIndex}, ${sectionCount})">添加图片</button>
+                `;
+            }
+            
+            fieldsDiv.innerHTML = fieldsHtml;
+        };
+        
+    </script>
+</body>
+</html>
