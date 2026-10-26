@@ -26,7 +26,10 @@
     GATE_FLAG: 'dptkGateHandled',
     TITLE: '访问验证',
     NOTICE_TITLE: '公告',
-    NOTICE_BODY: '由于个人权限相关机制，现需要输入口令才可进行下一步操作。',
+    // 公告条文案（含补充说明）
+    NOTICE_BODY: '由于个人权限相关机制，现需要输入口令才可进行下一步操作。详细说明书与操作流程，后续给出。',
+    // 口令弹窗文案（保持简短，不重复"后续给出"那句）
+    MODAL_BODY: '由于个人权限相关机制，现需要输入口令才可进行下一步操作。',
     SUB: '请输入访问口令以查看名片',
     PLACEHOLDER: '请输入口令',
     ERR: '口令不正确，请重新输入',
@@ -141,7 +144,7 @@
     var mask = overlay(
       '<div class="dptk-gate-ico">&#128274;</div>' +
       '<div class="dptk-gate-h">' + esc(CONFIG.TITLE) + '</div>' +
-      '<div class="dptk-gate-p">' + esc(CONFIG.NOTICE_BODY) + '<br>' + esc(CONFIG.SUB) + '</div>' +
+      '<div class="dptk-gate-p">' + esc(CONFIG.MODAL_BODY) + '<br>' + esc(CONFIG.SUB) + '</div>' +
       '<input class="dptk-gate-in" type="password" autocomplete="off" ' +
       'inputmode="text" placeholder="' + esc(CONFIG.PLACEHOLDER) + '">' +
       '<div class="dptk-gate-err"></div>' +
